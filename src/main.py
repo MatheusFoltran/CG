@@ -4,11 +4,20 @@ Programa principal do sistema de projeção perspectiva cônica.
 Orquestra todo o pipeline de transformações.
 
 Uso:
-    python main.py [caminho_arquivo_objeto]
+    python main.py [objeto] [config] [--modo MODO]
     
-Exemplo:
+Exemplos:
+    # Configuração automática (padrão)
     python main.py ../objetos/cubo.txt
-    python main.py ../objetos/piramide.txt
+    
+    # Modos automáticos diferentes
+    python main.py ../objetos/cubo.txt --modo frontal
+    python main.py ../objetos/cubo.txt --modo lateral
+    python main.py ../objetos/cubo.txt --modo superior
+    python main.py ../objetos/cubo.txt --modo isometrica
+    
+    # Arquivo de configuração personalizado
+    python main.py ../objetos/cubo.txt ../objetos/config_default.txt
 """
 
 import sys
@@ -23,6 +32,7 @@ from projection import (
 )
 from renderer import desenhar_wireframe, salvar_imagem, imprimir_estatisticas
 from file_parser import ler_objeto_3d, listar_objetos_disponiveis, imprimir_info_objeto
+from config_parser import ler_configuracao_camera, gerar_configuracao_automatica, imprimir_configuracao
 
 
 def obter_arquivo_objeto():
@@ -49,7 +59,7 @@ def obter_arquivo_objeto():
     
     if not objetos:
         print("❌ Nenhum objeto encontrado no diretório 'objetos/'")
-        print("\nUso: python main.py <caminho_arquivo_objeto>")
+        print("\nUso: python main.py <caminho_objeto> [caminho_config]")
         sys.exit(1)
     
     # Seleção interativa
@@ -69,6 +79,43 @@ def obter_arquivo_objeto():
         except (ValueError, KeyboardInterrupt):
             print("\n❌ Operação cancelada.")
             sys.exit(0)
+
+
+def obter_configuracao_camera(vertices):
+    """
+    Obtém configuração de câmera do arquivo ou gera automaticamente.
+    
+    Args:
+        vertices: vértices do objeto para configuração automática
+    
+    Returns:
+        dict: configuração de câmera e plano
+    """
+    # Verificar se tem modo especificado (--modo)
+    modo_auto = 'frontal'  # padrão
+    if '--modo' in sys.argv:
+        idx = sys.argv.index('--modo')
+        if idx + 1 < len(sys.argv):
+            modo_solicitado = sys.argv[idx + 1].lower()
+            if modo_solicitado in ['frontal', 'lateral', 'superior', 'isometrica']:
+                modo_auto = modo_solicitado
+                print(f"\n🤖 Gerando configuração automática: modo '{modo_auto}'...")
+                return gerar_configuracao_automatica(vertices, modo_auto)
+    
+    # Verificar se foi passado arquivo de configuração
+    if len(sys.argv) > 2 and not sys.argv[2].startswith('--'):
+        arquivo_config = sys.argv[2]
+        if os.path.exists(arquivo_config):
+            try:
+                print(f"\n📋 Carregando configuração de: {os.path.basename(arquivo_config)}")
+                return ler_configuracao_camera(arquivo_config)
+            except Exception as e:
+                print(f"⚠️ Erro ao ler configuração: {e}")
+                print("   Usando configuração automática...")
+    
+    # Configuração automática padrão
+    print(f"\n🤖 Gerando configuração automática: modo '{modo_auto}'...")
+    return gerar_configuracao_automatica(vertices, modo_auto)
 
 
 def main():
@@ -100,36 +147,22 @@ def main():
     
     print("\n🎥 CONFIGURANDO CÂMERA E PLANO...")
     
-    # Calcular centro do objeto para melhor posicionamento
-    centro_objeto = vertices.mean(axis=0)
-    bbox_min = vertices.min(axis=0)
-    bbox_max = vertices.max(axis=0)
-    tamanho_objeto = bbox_max - bbox_min
+    # Obter configuração (de arquivo ou automática)
+    config = obter_configuracao_camera(vertices)
     
-    print(f"   Centro do objeto: {centro_objeto}")
-    print(f"   Tamanho: {tamanho_objeto}")
-    
-    # Ponto de Vista (Centro de Projeção - Câmera)
-    # Posicionar a câmera atrás e acima do objeto
-    distancia_camera = max(tamanho_objeto) * 3  # 3x o tamanho do objeto
-    C = centro_objeto + np.array([0, 0, distancia_camera])
-    print(f"   Centro de Projeção (C): {C}")
-    print(f"   💡 Raios de projeção convergem para C (perspectiva cônica)")
-    
-    # Plano de Projeção (3 pontos distintos não-colineares)
-    # Plano perpendicular ao eixo Z, entre câmera e objeto
-    z_plano = centro_objeto[2] - tamanho_objeto[2]  # À frente do objeto
-    tam_plano = max(tamanho_objeto) * 2
-    
-    P1 = np.array([centro_objeto[0] - tam_plano, centro_objeto[1] - tam_plano, z_plano])
-    P2 = np.array([centro_objeto[0] + tam_plano, centro_objeto[1] - tam_plano, z_plano])
-    P3 = np.array([centro_objeto[0] - tam_plano, centro_objeto[1] + tam_plano, z_plano])
+    C = config['camera']
+    P1 = config['plano_p1']
+    P2 = config['plano_p2']
+    P3 = config['plano_p3']
     R0 = P1  # Ponto sobre o plano
     
-    print(f"   Plano em z={z_plano:.2f}")
-    print(f"   P1={P1}")
-    print(f"   P2={P2}")
-    print(f"   P3={P3}")
+    if config['viewport']:
+        largura_tela, altura_tela = config['viewport']
+    else:
+        largura_tela, altura_tela = 800, 600
+    
+    print(f"   💡 Raios de projeção convergem para C (perspectiva cônica)")
+    imprimir_configuracao(config)
     
     # ========================================
     # 3. CALCULAR VETOR NORMAL AO PLANO
@@ -194,9 +227,6 @@ def main():
     # ========================================
     
     print("\n🖥️  TRANSFORMANDO PARA VIEWPORT...")
-    
-    largura_tela = 800
-    altura_tela = 600
     
     pontos_tela = janela_para_viewport(
         vertices_2d, 
