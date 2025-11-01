@@ -1,7 +1,13 @@
 """
 projection.py
 Sistema de projeção perspectiva cônica.
-Implementa todas as transformações necessárias para projetar objetos 3D em 2D.
+Implementa transformações para projetar objetos 3D em 2D usando perspectiva cônica.
+
+Perspectiva Cônica:
+- Centro de projeção (C): ponto de vista da câmera
+- Plano de projeção: definido por 3 pontos não-colineares
+- Raios de projeção convergem para o centro C (pontos de fuga)
+- Distância do ponto ao plano afeta o tamanho projetado
 """
 
 import numpy as np
@@ -78,11 +84,20 @@ def projetar_ponto(ponto, matriz):
     """
     Projeta um ponto 3D no plano de projeção usando perspectiva cônica.
     
+    Perspectiva Cônica:
+    - Raios de projeção convergem para o centro de projeção C
+    - Pontos mais distantes de C aparecem menores (efeito de profundidade)
+    - Linhas paralelas convergem para pontos de fuga no plano de projeção
+    - A divisão por w' implementa a convergência perspectiva
+    
     Processo:
     1. Converter para coordenadas homogêneas: P = [x, y, z, 1]
     2. Multiplicar pela matriz: P' = M_per · P
     3. Resultado em coordenadas homogêneas: P' = [x', y', z', w']
-    4. Converter para cartesianas: XC = x'/w', YC = y'/w', ZC = z'/w'
+    4. Divisão perspectiva: XC = x'/w', YC = y'/w', ZC = z'/w'
+       💡 Esta divisão cria o efeito de PONTO DE FUGA
+       💡 w' varia com a distância do ponto ao plano
+       💡 Quanto maior w', menor o ponto projetado
     5. Coordenadas no plano: XP = XC, YP = YC
     
     Args:
@@ -102,15 +117,15 @@ def projetar_ponto(ponto, matriz):
     
     x_prime, y_prime, z_prime, w_prime = P_prime
     
-    # 3. Conversão para coordenadas cartesianas
+    # 3. DIVISÃO PERSPECTIVA (cria o efeito de ponto de fuga)
     if w_prime != 0:
         XC = x_prime / w_prime
         YC = y_prime / w_prime
         ZC = z_prime / w_prime
     else:
-        # Ponto no infinito - tratamento especial
+        # Ponto no infinito - no ponto de fuga
         XC, YC, ZC = 0, 0, 0
-        print(f"⚠️ Aviso: Ponto {ponto} resultou em w'=0 (infinito)")
+        print(f"⚠️ Aviso: Ponto {ponto} está no ponto de fuga (w'=0)")
     
     # 4. Coordenadas no plano de projeção
     XP = XC
@@ -147,17 +162,7 @@ def janela_para_viewport(pontos_2d, u_min=0, u_max=800, v_min=0, v_max=600):
     """
     Transforma coordenadas do plano (janela/mundo) para viewport (dispositivo/tela).
     
-    Implementação seguindo as especificações do PDF:
-    - Centraliza o objeto na tela
-    - Mantém proporções (aspect ratio)
-    - Considera diferenças entre Rw e Rv
-    
-    Fórmulas:
-        Rw = (x_max - x_min) / (y_max - y_min)  [razão da janela]
-        Rv = (u_max - u_min) / (v_max - v_min)  [razão da viewport]
-    
-    Se Rw > Rv: ajusta v_max_novo
-    Se Rw ≤ Rv: ajusta u_max_novo
+    Centraliza e escala o objeto para caber na viewport mantendo proporções.
     
     Args:
         pontos_2d: array Nx2 com coordenadas no plano
@@ -176,44 +181,47 @@ def janela_para_viewport(pontos_2d, u_min=0, u_max=800, v_min=0, v_max=600):
     y_min = pontos_2d[:, 1].min()
     y_max = pontos_2d[:, 1].max()
     
-    # Evitar divisão por zero
+    # Dimensões
     largura_janela = x_max - x_min
     altura_janela = y_max - y_min
+    largura_viewport = u_max - u_min
+    altura_viewport = v_max - v_min
     
+    # Evitar divisão por zero
     if largura_janela == 0:
         largura_janela = 1
     if altura_janela == 0:
         altura_janela = 1
     
-    # Razões de aspecto
-    Rw = largura_janela / altura_janela
-    Rv = (u_max - u_min) / (v_max - v_min)
+    # Calcular escala para caber na viewport mantendo proporção
+    # Usa a menor escala para garantir que tudo caiba
+    escala_x = largura_viewport / largura_janela
+    escala_y = altura_viewport / altura_janela
+    escala = min(escala_x, escala_y) * 0.8  # 0.8 = margem de 10% em cada lado
     
-    # Fatores de escala
-    sx = (u_max - u_min) / largura_janela
-    sy = (v_max - v_min) / altura_janela
+    # Centro da janela
+    centro_janela_x = (x_min + x_max) / 2
+    centro_janela_y = (y_min + y_max) / 2
     
+    # Centro da viewport
+    centro_viewport_u = (u_min + u_max) / 2
+    centro_viewport_v = (v_min + v_max) / 2
+    
+    # Transformar pontos
     pontos_tela = []
-    
-    # Aplicar transformação conforme PDF
-    if Rw > Rv:
-        # Janela mais "larga" que viewport - ajustar altura
-        v_max_novo = (u_max - u_min) / Rw + v_min
-        offset_v = (v_max - v_max_novo) / 2
+    for x, y in pontos_2d:
+        # Centralizar na origem
+        x_cent = x - centro_janela_x
+        y_cent = y - centro_janela_y
         
-        for x, y in pontos_2d:
-            u = sx * (x - x_min) + u_min
-            v = -sy * (y - y_max) + v_max - offset_v
-            pontos_tela.append([u, v])
-    
-    else:
-        # Janela mais "alta" que viewport - ajustar largura
-        u_max_novo = Rw * (v_max - v_min) + u_min
-        offset_u = (u_max - u_max_novo) / 2
+        # Escalar
+        x_esc = x_cent * escala
+        y_esc = y_cent * escala
         
-        for x, y in pontos_2d:
-            u = sx * (x - x_min) + u_min + offset_u
-            v = -sy * (y - y_max) + v_max
-            pontos_tela.append([u, v])
+        # Mover para centro da viewport
+        u = centro_viewport_u + x_esc
+        v = centro_viewport_v - y_esc  # Inverter Y (tela cresce para baixo)
+        
+        pontos_tela.append([u, v])
     
     return np.array(pontos_tela)

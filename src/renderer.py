@@ -20,7 +20,15 @@ def desenhar_wireframe(pontos_tela, superficies, largura=800, altura=600,
         mostrar_vertices: se True, desenha os vértices como pontos
         titulo: título da janela
     """
+    print(f"\n   Debug - Renderização:")
+    print(f"   Pontos na tela: {len(pontos_tela)}")
+    print(f"   Superfícies: {len(superficies)}")
+    print(f"   Limites u: [{pontos_tela[:, 0].min():.1f}, {pontos_tela[:, 0].max():.1f}]")
+    print(f"   Limites v: [{pontos_tela[:, 1].min():.1f}, {pontos_tela[:, 1].max():.1f}]")
+    
     fig, ax = plt.subplots(figsize=(12, 9))
+    
+    arestas_desenhadas = 0
     
     # Desenhar cada superfície (face)
     for i, superficie in enumerate(superficies):
@@ -33,32 +41,41 @@ def desenhar_wireframe(pontos_tela, superficies, largura=800, altura=600,
             xs = [p[0] for p in pontos_face]
             ys = [p[1] for p in pontos_face]
             
-            # Desenhar arestas
-            ax.plot(xs, ys, 'b-', linewidth=1.5, alpha=0.7)
+            # Desenhar arestas com cores alternadas para melhor visualização
+            cor = 'blue' if i % 2 == 0 else 'darkblue'
+            ax.plot(xs, ys, color=cor, linewidth=2, alpha=0.8, solid_capstyle='round')
+            arestas_desenhadas += len(xs) - 1
             
         except IndexError as e:
             print(f"⚠️ Aviso: Superfície {i} contém índice inválido: {e}")
     
+    print(f"   Arestas desenhadas: {arestas_desenhadas}")
+    
     # Desenhar vértices
     if mostrar_vertices:
         ax.plot(pontos_tela[:, 0], pontos_tela[:, 1], 'ro', 
-                markersize=6, label='Vértices', zorder=5)
+                markersize=8, label='Vértices', zorder=5, markeredgecolor='darkred', markeredgewidth=1)
         
         # Numerar vértices (opcional, útil para debug)
         for i, (x, y) in enumerate(pontos_tela):
-            ax.annotate(str(i), (x, y), xytext=(5, 5), 
-                       textcoords='offset points', fontsize=8, color='red')
+            ax.annotate(str(i), (x, y), xytext=(7, 7), 
+                       textcoords='offset points', fontsize=10, color='red', 
+                       fontweight='bold', bbox=dict(boxstyle='round,pad=0.3', 
+                       facecolor='white', edgecolor='red', alpha=0.7))
     
     # Configurações do gráfico
     ax.set_xlim(0, largura)
     ax.set_ylim(0, altura)
     ax.invert_yaxis()  # Eixo Y da tela cresce para baixo
     ax.set_aspect('equal')
-    ax.set_title(titulo, fontsize=16, fontweight='bold')
+    ax.set_title(titulo, fontsize=16, fontweight='bold', pad=20)
     ax.set_xlabel('u (pixels)', fontsize=12)
     ax.set_ylabel('v (pixels)', fontsize=12)
-    ax.grid(True, alpha=0.3, linestyle='--')
-    ax.legend()
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+    ax.legend(fontsize=10)
+    
+    # Adicionar fundo cinza claro
+    ax.set_facecolor('#f5f5f5')
     
     plt.tight_layout()
     plt.show()
