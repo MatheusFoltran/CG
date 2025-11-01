@@ -1,0 +1,40 @@
+# PIRAMIDE.TXT
+# Objeto 3D: Pirâmide de base quadrada
+# Base no plano z=0, ápice em (1, 1, 3)
+
+# Número de Vértices
+NV 5
+
+# Coordenadas dos Vértices (X Y Z)
+# Base quadrada (4 vértices)
+# Vértice 0 (canto inferior esquerdo)
+0 0 0
+# Vértice 1 (canto inferior direito)
+2 0 0
+# Vértice 2 (canto superior direito)
+2 2 0
+# Vértice 3 (canto superior esquerdo)
+0 2 0
+# Vértice 4 (ápice/topo da pirâmide)
+1 1 3
+
+# Número de Superfícies
+NS 5
+
+# Superfícies (Número_de_Vértices Índice_V1 Índice_V2 ... Índice_Vn)
+# Regra da mão direita: vértices em sentido anti-horário visto de fora
+
+# Base (face quadrada, z=0)
+4 0 1 2 3
+
+# Face lateral frontal (triângulo, lado y=0)
+3 0 1 4
+
+# Face lateral direita (triângulo, lado x=2)
+3 1 2 4
+
+# Face lateral traseira (triângulo, lado y=2)
+3 2 3 4
+
+# Face lateral esquerda (triângulo, lado x=0)
+3 3 0 4

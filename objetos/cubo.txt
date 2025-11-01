@@ -1,0 +1,48 @@
+# CUBO.TXT
+# Objeto 3D: Cubo de lado 2
+# Coordenadas em sistema cartesiano 3D
+
+# Número de Vértices
+NV 8
+
+# Coordenadas dos Vértices (X Y Z)
+# Vértice 0
+0 0 0
+# Vértice 1
+2 0 0
+# Vértice 2
+2 2 0
+# Vértice 3
+0 2 0
+# Vértice 4
+0 0 2
+# Vértice 5
+2 0 2
+# Vértice 6
+2 2 2
+# Vértice 7
+0 2 2
+
+# Número de Superfícies
+NS 6
+
+# Superfícies (Número_de_Vértices Índice_V1 Índice_V2 ... Índice_Vn)
+# Regra da mão direita: vértices em sentido anti-horário visto de fora
+
+# Face frontal (z=0)
+4 0 1 2 3
+
+# Face traseira (z=2)
+4 4 5 6 7
+
+# Face inferior (y=0)
+4 0 1 5 4
+
+# Face superior (y=2)
+4 2 3 7 6
+
+# Face esquerda (x=0)
+4 0 3 7 4
+
+# Face direita (x=2)
+4 1 2 6 5
