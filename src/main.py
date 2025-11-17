@@ -47,31 +47,6 @@ def configurar_camera_e_plano():
     # Ponto sobre o plano (pode ser P1, P2 ou P3)
     R0 = P1
     
-    # ============================================
-    # OUTRAS CONFIGURAÇÕES DE EXEMPLO:
-    # ============================================
-    
-    # Vista diagonal interessante:
-    # C = np.array([5.0, 5.0, 8.0])
-    # P1 = np.array([0.0, 0.0, 4.0])
-    # P2 = np.array([3.0, 0.0, 4.0])
-    # P3 = np.array([0.0, 3.0, 4.0])
-    # R0 = P1
-    
-    # Vista de cima (top view):
-    # C = np.array([1.0, 10.0, 1.0])
-    # P1 = np.array([0.0, 5.0, 0.0])
-    # P2 = np.array([3.0, 5.0, 0.0])
-    # P3 = np.array([0.0, 5.0, 3.0])
-    # R0 = P1
-    
-    # Vista lateral (side view):
-    # C = np.array([10.0, 1.0, 1.0])
-    # P1 = np.array([5.0, 0.0, 0.0])
-    # P2 = np.array([5.0, 3.0, 0.0])
-    # P3 = np.array([5.0, 0.0, 3.0])
-    # R0 = P1
-    
     print(f"\n📍 Ponto de Vista (C):      {C}")
     print(f"📐 Plano de Projeção:")
     print(f"   P1 = {P1}")

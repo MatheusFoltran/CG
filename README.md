@@ -10,34 +10,27 @@ Sistema de visualização projetivo baseado em **perspectiva cônica**. Implemen
 
 ## 🗂️ Estrutura do Projeto
 
-```
-projecao-perspectiva/
-│
+Trabalho/
 ├── README.md
 ├── requirements.txt
-│
-├── src/
-│   ├── math_utils.py      # Operações matemáticas (vetores, produto vetorial)
-│   ├── projection.py      # Lógica de projeção perspectiva
-│   ├── renderer.py        # Visualização 2D do resultado
-│   └── main.py            # Programa principal
-│
-└── objetos/
-    ├── cubo.txt
-    └── piramide.txt
-```
-
----
-
+├── objetos/
+│   ├── cubo.txt
+│   └── piramide.txt
+└── src/
+   ├── file_parser.py      # Leitura de arquivos de objetos 3D
+   ├── math_utils.py       # Operações matemáticas (vetores, produto vetorial)
+   ├── projection.py       # Lógica de projeção perspectiva
+   ├── renderer.py         # Visualização 2D do resultado
+   ├── main.py             # Programa principal (CLI/menu)
+   └── __pycache__/
 ## 🚀 Como Executar
 
 ### 1️⃣ Instalação
 
 ```bash
-# Clonar/baixar o projeto
-cd projecao-perspectiva
+1. Clonar o repositório
 
-# Instalar dependências
+2. Instalar dependências
 pip install -r requirements.txt
 ```
 
@@ -52,7 +45,7 @@ python src/main.py
 #### Modo CLI (sem menu)
 
 ```bash
-# Projetar diretamente um arquivo
+# Projetar diretamente um arquivo do diretório padrão
 python src/main.py --objeto cubo.txt
 
 # Projetar arquivo em outro diretório
@@ -93,8 +86,8 @@ python src/main.py --listar --objetos-dir ./objetos
 3. **Montar Matriz de Perspectiva 4×4**
    ```
    ⎡ d+a·nx   a·ny    a·nz    -a·d0 ⎤
-   ⎢ b·nx   d+b·ny   b·nz    -b·d0 ⎥
-   ⎢ c·nx    c·ny   d+c·nz   -c·d0 ⎥
+   ⎢ b·nx   d+b·ny   b·nz     -b·d0 ⎥
+   ⎢ c·nx    c·ny   d+c·nz    -c·d0 ⎥
    ⎣  nx      ny      nz        d   ⎦
    ```
 
@@ -119,6 +112,10 @@ python src/main.py --listar --objetos-dir ./objetos
 
 ## 📁 Descrição dos Módulos
 
+### `file_parser.py`
+Leitura e parsing dos arquivos de objetos 3D (.txt).
+- `ler_objeto_3d()` - Carrega vértices e superfícies a partir de arquivo.
+
 ### `math_utils.py`
 Funções matemáticas fundamentais:
 - `produto_vetorial()` - Calcula v1 × v2
@@ -132,6 +129,7 @@ Núcleo do sistema de projeção:
 - `projetar_ponto()` - Projeta um vértice 3D → 2D
 - `projetar_objeto()` - Projeta todos os vértices
 - `janela_para_viewport()` - Transforma para coordenadas da tela
+- `calcular_pontos_de_fuga()` - Calcula pontos de fuga dos eixos principais
 
 ### `renderer.py`
 Visualização gráfica:
@@ -147,6 +145,7 @@ Orquestra todo o pipeline:
 5. Projeta vértices
 6. Transforma para viewport
 7. Renderiza resultado
+8. Mostra pontos de fuga dos eixos principais
 
 ---
 
@@ -154,41 +153,20 @@ Orquestra todo o pipeline:
 
 ### Trocar o Objeto
 
-Edite `main.py`:
+Use arquivos `.txt` em `objetos/` ou passe o caminho via CLI:
 
-```python
-# Pirâmide
-vertices = np.array([
-    [0, 0, 0],    # base
-    [2, 0, 0],
-    [1, 2, 0],
-    [1, 1, 2]     # topo
-])
-
-superficies = [
-    [0, 1, 2],    # base
-    [0, 1, 3],    # faces laterais
-    [1, 2, 3],
-    [2, 0, 3]
-]
+```bash
+python src/main.py --objeto objetos/piramide.txt
 ```
 
 ### Mudar Posição da Câmera
 
-```python
-C = np.array([10, 10, 15])  # Mais distante
-C = np.array([3, 3, 5])     # Mais perto
-C = np.array([-5, 5, 10])   # Vista lateral
-```
+Edite os parâmetros no menu interativo ou diretamente no código.
+
 
 ### Alterar Plano de Projeção
 
-```python
-# Plano inclinado
-P1 = np.array([0, 0, 0])
-P2 = np.array([10, 0, 5])
-P3 = np.array([0, 10, 3])
-```
+Edite os pontos do plano no menu ou código.
 
 ---
 
@@ -200,7 +178,7 @@ P3 = np.array([0, 10, 3])
 
 ---
 
-## 📝 Formato de Arquivos de Objetos (Opcional)
+## 📝 Formato de Arquivos de Objetos
 
 ```
 # cubo.txt
@@ -235,9 +213,10 @@ NS 6
 Para verificar se está funcionando corretamente:
 
 1. **Vetor Normal** - Deve ser perpendicular ao plano
-2. **Matriz de Perspectiva** - Elementos devem seguir as fórmulas do PDF
+2. **Matriz de Perspectiva** - Elementos devem seguir as fórmulas matemáticas
 3. **Projeção** - Objetos mais distantes devem parecer menores
 4. **Viewport** - Objeto deve estar centralizado na tela
+5. **Pontos de Fuga** - Conferir logs para ver se os pontos de fuga fazem sentido geométrico
 
 ---
 
@@ -259,21 +238,9 @@ Para verificar se está funcionando corretamente:
 
 ## 🎓 Notas de Implementação
 
-### Diferenças em relação ao PDF
-
-1. **Vetor Normal**: O PDF contém um erro de digitação na fórmula de nx (usa z3x2 ao invés de z3z2). Nosso código usa `np.cross()` que implementa corretamente.
-
-2. **Transformação Viewport**: Implementamos tanto a versão iterativa (mais clara) quanto a matricial (mais matemática).
-
+1. **Vetor Normal**: O cálculo usa `np.cross()` para garantir precisão.
+2. **Transformação Viewport**: Implementação clara e robusta.
 3. **Coordenadas Homogêneas**: Tratamento explícito de casos especiais (w=0).
-
-### Melhorias Possíveis
-
-- [ ] Leitura de objetos de arquivos .txt
-- [ ] Remoção de faces ocultas (back-face culling)
-- [ ] Iluminação e sombreamento
-- [ ] Rotação interativa do objeto
-- [ ] Suporte a múltiplos objetos na cena
-- [ ] Exportação para diferentes formatos de imagem
+4. **Pontos de Fuga**: Calculados e exibidos automaticamente no log.
 
 ---
