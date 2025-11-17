@@ -1,269 +1,365 @@
 """
 main.py
-Programa principal do sistema de projeção perspectiva cônica.
-Orquestra todo o pipeline de transformações.
+Sistema completo de visualização com projeção perspectiva cônica.
 
-Uso:
-    python main.py [objeto] [config] [--modo MODO]
-    
-Exemplos:
-    # Configuração automática (padrão)
-    python main.py ../objetos/cubo.txt
-    
-    # Modos automáticos diferentes
-    python main.py ../objetos/cubo.txt --modo frontal
-    python main.py ../objetos/cubo.txt --modo lateral
-    python main.py ../objetos/cubo.txt --modo superior
-    python main.py ../objetos/cubo.txt --modo isometrica
-    
-    # Arquivo de configuração personalizado
-    python main.py ../objetos/cubo.txt ../objetos/config_default.txt
+COMO USAR:
+    python main.py
 """
 
-import sys
-import os
+import argparse
 import numpy as np
+import os
+from file_parser import ler_objeto_3d, imprimir_info_objeto, listar_objetos_disponiveis
 from math_utils import calcular_vetor_normal
 from projection import (
     calcular_parametros_d,
     criar_matriz_perspectiva,
     projetar_objeto,
-    janela_para_viewport
+    projetar_ponto,
+    janela_para_viewport,
+    calcular_pontos_de_fuga
 )
-from renderer import desenhar_wireframe, salvar_imagem, imprimir_estatisticas
-from file_parser import ler_objeto_3d, listar_objetos_disponiveis, imprimir_info_objeto
-from config_parser import ler_configuracao_camera, gerar_configuracao_automatica, imprimir_configuracao
+from renderer import desenhar_wireframe, imprimir_estatisticas
 
 
-def obter_arquivo_objeto():
+def configurar_camera_e_plano():
     """
-    Obtém o arquivo de objeto a partir dos argumentos da linha de comando
-    ou permite seleção interativa.
+    Configura os parâmetros de visualização.
     
     Returns:
-        str: caminho para o arquivo do objeto
-    """
-    # Verificar argumentos da linha de comando
-    if len(sys.argv) > 1:
-        caminho = sys.argv[1]
-        if os.path.exists(caminho):
-            return caminho
-        else:
-            print(f"⚠️ Arquivo não encontrado: {caminho}")
-    
-    # Tentar listar objetos disponíveis no diretório padrão
-    dir_atual = os.path.dirname(os.path.abspath(__file__))
-    dir_objetos = os.path.join(os.path.dirname(dir_atual), 'objetos')
-    
-    objetos = listar_objetos_disponiveis(dir_objetos)
-    
-    if not objetos:
-        print("❌ Nenhum objeto encontrado no diretório 'objetos/'")
-        print("\nUso: python main.py <caminho_objeto> [caminho_config]")
-        sys.exit(1)
-    
-    # Seleção interativa
-    print("\n📁 Objetos disponíveis:")
-    for i, obj in enumerate(objetos, 1):
-        nome = os.path.basename(obj)
-        print(f"   {i}. {nome}")
-    
-    while True:
-        try:
-            escolha = input("\nEscolha um objeto (1-{}): ".format(len(objetos)))
-            idx = int(escolha) - 1
-            if 0 <= idx < len(objetos):
-                return objetos[idx]
-            else:
-                print("❌ Escolha inválida. Tente novamente.")
-        except (ValueError, KeyboardInterrupt):
-            print("\n❌ Operação cancelada.")
-            sys.exit(0)
-
-
-def obter_configuracao_camera(vertices):
-    """
-    Obtém configuração de câmera do arquivo ou gera automaticamente.
-    
-    Args:
-        vertices: vértices do objeto para configuração automática
-    
-    Returns:
-        dict: configuração de câmera e plano
-    """
-    # Verificar se tem modo especificado (--modo)
-    modo_auto = 'frontal'  # padrão
-    if '--modo' in sys.argv:
-        idx = sys.argv.index('--modo')
-        if idx + 1 < len(sys.argv):
-            modo_solicitado = sys.argv[idx + 1].lower()
-            if modo_solicitado in ['frontal', 'lateral', 'superior', 'isometrica']:
-                modo_auto = modo_solicitado
-                print(f"\n🤖 Gerando configuração automática: modo '{modo_auto}'...")
-                return gerar_configuracao_automatica(vertices, modo_auto)
-    
-    # Verificar se foi passado arquivo de configuração
-    if len(sys.argv) > 2 and not sys.argv[2].startswith('--'):
-        arquivo_config = sys.argv[2]
-        if os.path.exists(arquivo_config):
-            try:
-                print(f"\n📋 Carregando configuração de: {os.path.basename(arquivo_config)}")
-                return ler_configuracao_camera(arquivo_config)
-            except Exception as e:
-                print(f"⚠️ Erro ao ler configuração: {e}")
-                print("   Usando configuração automática...")
-    
-    # Configuração automática padrão
-    print(f"\n🤖 Gerando configuração automática: modo '{modo_auto}'...")
-    return gerar_configuracao_automatica(vertices, modo_auto)
-
-
-def main():
-    """
-    Executa todo o pipeline de projeção perspectiva cônica.
+        tuple: (C, P1, P2, P3, R0)
     """
     print("\n" + "="*70)
-    print(" "*15 + "SISTEMA DE PROJEÇÃO PERSPECTIVA CÔNICA")
-    print(" "*20 + "Computação Gráfica - UEM")
+    print("🎥 CONFIGURAÇÃO DE CÂMERA E PLANO DE PROJEÇÃO")
+    print("="*70)
+    
+    # ============================================
+    # CONFIGURAÇÃO PADRÃO - VISTA FRONTAL DO CUBO
+    # ============================================
+    # Ponto de vista (câmera)
+    C = np.array([1.0, 1.0, 10.0])  # Câmera à frente do objeto
+    
+    # Plano de projeção (paralelo ao plano XY, em z=5)
+    P1 = np.array([0.0, 0.0, 5.0])
+    P2 = np.array([4.0, 0.0, 5.0])
+    P3 = np.array([0.0, 4.0, 5.0])
+    
+    # Ponto sobre o plano (pode ser P1, P2 ou P3)
+    R0 = P1
+    
+    # ============================================
+    # OUTRAS CONFIGURAÇÕES DE EXEMPLO:
+    # ============================================
+    
+    # Vista diagonal interessante:
+    # C = np.array([5.0, 5.0, 8.0])
+    # P1 = np.array([0.0, 0.0, 4.0])
+    # P2 = np.array([3.0, 0.0, 4.0])
+    # P3 = np.array([0.0, 3.0, 4.0])
+    # R0 = P1
+    
+    # Vista de cima (top view):
+    # C = np.array([1.0, 10.0, 1.0])
+    # P1 = np.array([0.0, 5.0, 0.0])
+    # P2 = np.array([3.0, 5.0, 0.0])
+    # P3 = np.array([0.0, 5.0, 3.0])
+    # R0 = P1
+    
+    # Vista lateral (side view):
+    # C = np.array([10.0, 1.0, 1.0])
+    # P1 = np.array([5.0, 0.0, 0.0])
+    # P2 = np.array([5.0, 3.0, 0.0])
+    # P3 = np.array([5.0, 0.0, 3.0])
+    # R0 = P1
+    
+    print(f"\n📍 Ponto de Vista (C):      {C}")
+    print(f"📐 Plano de Projeção:")
+    print(f"   P1 = {P1}")
+    print(f"   P2 = {P2}")
+    print(f"   P3 = {P3}")
+    print(f"   R0 = {R0}")
+    
+    return C, P1, P2, P3, R0
+
+
+def configurar_viewport():
+    """
+    Configura os limites da viewport (tela).
+    
+    Returns:
+        tuple: (u_min, u_max, v_min, v_max)
+    """
+    print("\n🖥️  CONFIGURAÇÃO DA VIEWPORT")
+    
+    # Resolução da tela (pixels)
+    u_min = 0
+    u_max = 800
+    v_min = 0
+    v_max = 600
+    
+    print(f"   Limites: u=[{u_min}, {u_max}], v=[{v_min}, {v_max}]")
+    print(f"   Resolução: {u_max}x{v_max} pixels")
+    
+    return u_min, u_max, v_min, v_max
+
+
+def processar_projecao_perspectiva(caminho_arquivo):
+    """
+    Pipeline completo de projeção perspectiva.
+    
+    Args:
+        caminho_arquivo: caminho para o arquivo do objeto 3D
+    """
+    print("\n" + "="*70)
+    print("🚀 SISTEMA DE VISUALIZAÇÃO COM PROJEÇÃO PERSPECTIVA CÔNICA")
     print("="*70)
     
     # ========================================
-    # 1. CARREGAR OBJETO DO ARQUIVO
+    # PASSO 1: Carregar objeto 3D
     # ========================================
-    
-    print("\n📥 CARREGANDO OBJETO 3D...")
-    
     try:
-        arquivo_objeto = obter_arquivo_objeto()
-        vertices, superficies, nome_objeto = ler_objeto_3d(arquivo_objeto)
-        imprimir_info_objeto(vertices, superficies, nome_objeto)
+        vertices, superficies, nome = ler_objeto_3d(caminho_arquivo)
+        imprimir_info_objeto(vertices, superficies, nome)
     except Exception as e:
-        print(f"❌ ERRO ao carregar objeto: {e}")
+        print(f"\n❌ Erro ao carregar objeto: {e}")
         return
     
     # ========================================
-    # 2. CONFIGURAR CÂMERA E PLANO DE PROJEÇÃO
+    # PASSO 2: Configurar câmera e plano
     # ========================================
-    
-    print("\n🎥 CONFIGURANDO CÂMERA E PLANO...")
-    
-    # Obter configuração (de arquivo ou automática)
-    config = obter_configuracao_camera(vertices)
-    
-    C = config['camera']
-    P1 = config['plano_p1']
-    P2 = config['plano_p2']
-    P3 = config['plano_p3']
-    R0 = P1  # Ponto sobre o plano
-    
-    if config['viewport']:
-        largura_tela, altura_tela = config['viewport']
-    else:
-        largura_tela, altura_tela = 800, 600
-    
-    print(f"   💡 Raios de projeção convergem para C (perspectiva cônica)")
-    imprimir_configuracao(config)
+    C, P1, P2, P3, R0 = configurar_camera_e_plano()
     
     # ========================================
-    # 3. CALCULAR VETOR NORMAL AO PLANO
+    # PASSO 3: Calcular vetor normal
     # ========================================
-    
-    print("\n🧮 CALCULANDO VETOR NORMAL...")
+    print("\n" + "="*70)
+    print("🧮 CÁLCULO DO VETOR NORMAL AO PLANO")
+    print("="*70)
     
     try:
         N = calcular_vetor_normal(P1, P2, P3)
-        print(f"   N = {N}")
-        print(f"   |N| = {np.linalg.norm(N):.4f}")
+        print(f"\n✅ Vetor Normal N = {N}")
+        print(f"   Componentes: Nx={N[0]:.4f}, Ny={N[1]:.4f}, Nz={N[2]:.4f}")
     except ValueError as e:
-        print(f"   ❌ ERRO: {e}")
+        print(f"\n❌ Erro: {e}")
         return
     
     # ========================================
-    # 4. CALCULAR PARÂMETROS d0, d1, d
+    # PASSO 4: Calcular parâmetros d
     # ========================================
-    
-    print("\n📐 CALCULANDO PARÂMETROS...")
-    print("   💡 d determina a distância do centro de projeção ao plano")
+    print("\n" + "="*70)
+    print("📐 CÁLCULO DOS PARÂMETROS d0, d1, d")
+    print("="*70)
     
     d0, d1, d = calcular_parametros_d(C, R0, N)
-    print(f"   d0 = {d0:.4f}")
-    print(f"   d1 = {d1:.4f}")
-    print(f"   d = {d:.4f}")
+    print(f"\n   d0 = R0 · N = {d0:.4f}")
+    print(f"   d1 = C · N  = {d1:.4f}")
+    print(f"   d  = d0 - d1 = {d:.4f}")
     
-    if d == 0:
-        print("   ⚠️ AVISO: d=0, câmera está no plano de projeção!")
-        print("   💡 Na perspectiva cônica, C deve estar fora do plano")
+    if abs(d) < 1e-10:
+        print("\n⚠️  AVISO: d ≈ 0. Câmera está muito próxima do plano!")
+        print("   Isso pode causar distorções extremas na projeção.")
     
     # ========================================
-    # 5. CRIAR MATRIZ DE PERSPECTIVA
+    # PASSO 5: Criar matriz de perspectiva
     # ========================================
-    
-    print("\n🔢 MONTANDO MATRIZ DE PERSPECTIVA CÔNICA...")
-    print("   💡 A matriz implementa a convergência para o ponto de fuga")
+    print("\n" + "="*70)
+    print("🔢 MATRIZ DE PROJEÇÃO PERSPECTIVA")
+    print("="*70)
     
     M_per = criar_matriz_perspectiva(C, N, d0, d)
-    print("   Matriz 4×4:")
-    for linha in M_per:
-        print(f"   [{linha[0]:8.3f} {linha[1]:8.3f} {linha[2]:8.3f} {linha[3]:8.3f}]")
+    print(f"\nM_per = ")
+    print(M_per)
+
+    pontos_fuga = calcular_pontos_de_fuga(C, N, R0)
+    pontos_finitos = {k: v for k, v in pontos_fuga.items() if v is not None}
+    print("\n📍 Pontos de fuga detectados:")
+    if not pontos_finitos:
+        print("   Nenhum ponto de fuga finito (plano paralelo aos eixos principais).")
+    else:
+        for eixo, ponto in pontos_fuga.items():
+            if ponto is None:
+                print(f"   {eixo}: ponto no infinito (retas paralelas ao plano)")
+            else:
+                fuga_2d = projetar_ponto(ponto, M_per)
+                print(f"   {eixo}: 3D{ponto} → 2D{fuga_2d}")
     
     # ========================================
-    # 6. PROJETAR VÉRTICES NO PLANO 2D
+    # PASSO 6: Projetar objeto no plano
     # ========================================
-    
-    print("\n📍 PROJETANDO VÉRTICES...")
-    print("   💡 Raios partem de cada vértice em direção a C")
-    print("   💡 Intersecção com o plano define o ponto projetado")
+    print("\n" + "="*70)
+    print("📍 PROJEÇÃO DOS VÉRTICES NO PLANO")
+    print("="*70)
     
     vertices_2d = projetar_objeto(vertices, M_per)
-    print(f"   Projetados: {len(vertices_2d)} vértices")
-    
-    # Mostrar alguns vértices projetados
-    print("\n   Exemplos (primeiros 4 vértices):")
-    for i in range(min(4, len(vertices_2d))):
-        print(f"   V{i}: 3D{vertices[i]} → 2D{vertices_2d[i]}")
+    print(f"\n✅ {len(vertices_2d)} vértices projetados com sucesso")
+    print(f"   Exemplo - Vértice 0:")
+    print(f"      3D: {vertices[0]}")
+    print(f"      2D: {vertices_2d[0]}")
     
     # ========================================
-    # 7. TRANSFORMAR PARA VIEWPORT (TELA)
+    # PASSO 7: Transformar para viewport
     # ========================================
+    print("\n" + "="*70)
+    print("🖼️  TRANSFORMAÇÃO JANELA → VIEWPORT")
+    print("="*70)
     
-    print("\n🖥️  TRANSFORMANDO PARA VIEWPORT...")
-    
+    u_min, u_max, v_min, v_max = configurar_viewport()
     pontos_tela = janela_para_viewport(
         vertices_2d, 
-        u_min=0, u_max=largura_tela,
-        v_min=0, v_max=altura_tela
+        u_min=u_min, 
+        u_max=u_max, 
+        v_min=v_min, 
+        v_max=v_max
     )
     
-    print(f"   Viewport: {largura_tela}×{altura_tela} pixels")
-    print(f"   Pontos mapeados: {len(pontos_tela)}")
+    print(f"\n✅ Transformação concluída")
+    print(f"   Exemplo - Vértice 0 na tela:")
+    print(f"      Plano: {vertices_2d[0]}")
+    print(f"      Tela:  {pontos_tela[0]} pixels")
     
     # ========================================
-    # 8. ESTATÍSTICAS (DEBUG)
+    # PASSO 8: Exibir estatísticas
     # ========================================
-    
     imprimir_estatisticas(vertices, vertices_2d, pontos_tela)
     
     # ========================================
-    # 9. RENDERIZAÇÃO
+    # PASSO 9: Renderizar
     # ========================================
+    print("\n" + "="*70)
+    print("🎨 RENDERIZAÇÃO")
+    print("="*70)
+    print("\n   Abrindo janela de visualização...")
     
-    print("\n🎨 RENDERIZANDO...")
-    
+    titulo = f"Projeção Perspectiva - {nome.upper()}"
     desenhar_wireframe(
         pontos_tela, 
-        superficies, 
-        largura_tela, 
-        altura_tela,
+        superficies,
+        largura=u_max,
+        altura=v_max,
         mostrar_vertices=True,
-        titulo=f"Projeção Perspectiva Cônica - {nome_objeto.upper()}"
+        titulo=titulo
     )
     
-    # Opcional: Salvar imagem
-    # salvar_imagem(pontos_tela, superficies, "resultado.png", largura_tela, altura_tela)
+    print("\n✅ Visualização concluída!")
+    print("="*70)
+
+
+def menu_interativo(dir_objetos=None):
+    """
+    Menu interativo para escolher objeto e configurações.
+    """
+    print("\n" + "="*70)
+    print("🎯 SISTEMA DE VISUALIZAÇÃO 3D - PROJEÇÃO PERSPECTIVA")
+    print("="*70)
     
-    print("\n✅ PROCESSO CONCLUÍDO COM SUCESSO!")
-    print("="*70 + "\n")
+    # Local padrão da pasta 'objetos' (um nível acima de src)
+    if dir_objetos is None:
+        dir_atual = os.path.dirname(os.path.abspath(__file__))
+        dir_objetos = os.path.join(os.path.dirname(dir_atual), 'objetos')
+
+    while True:
+        objetos = listar_objetos_disponiveis(dir_objetos)
+
+        print("\n📁 Objetos disponíveis na pasta 'objetos/':")
+        if not objetos:
+            print("   (Nenhum arquivo .txt encontrado em 'objetos/')")
+        else:
+            for i, caminho in enumerate(objetos, start=1):
+                nome = os.path.basename(caminho)
+                print(f"   {i:2d} - {nome}")
+
+        print("\n   Opções:")
+        print("     [número] - Selecionar arquivo pelo índice")
+        print("     [nome]   - Selecionar arquivo pelo nome (com ou sem .txt)")
+        print("     r        - Recarregar lista")
+        print("     q        - Sair")
+
+        escolha = input("\n   Escolha um arquivo (índice/nome) ou opção: ").strip()
+        if not escolha:
+            print("   ⚠️  Entrada vazia. Tente novamente.")
+            continue
+
+        if escolha.lower() == 'q':
+            print("\n👋 Até logo!")
+            break
+
+        if escolha.lower() == 'r':
+            continue
+
+        # Seleção por índice
+        if escolha.isdigit():
+            idx = int(escolha) - 1
+            if 0 <= idx < len(objetos):
+                caminho = objetos[idx]
+                processar_projecao_perspectiva(caminho)
+            else:
+                print("   ⚠️ Índice inválido. Tente novamente.")
+            continue
+
+        # Seleção por nome (com ou sem .txt)
+        nome_input = escolha
+        nome_ok = nome_input if nome_input.endswith('.txt') else nome_input + '.txt'
+        encontrados = [p for p in objetos if os.path.basename(p).lower() in (nome_input.lower(), nome_ok.lower())]
+        if encontrados:
+            processar_projecao_perspectiva(encontrados[0])
+            continue
+
+        print("   ⚠️ Arquivo não encontrado na pasta 'objetos/'. Use o índice ou nome correto.")
+
+
+def resolver_caminho_objeto(caminho, dir_objetos):
+    """Resolve caminho informado pelo usuário considerando diretório padrão."""
+    if os.path.isabs(caminho) and os.path.exists(caminho):
+        return caminho
+
+    candidato = os.path.join(dir_objetos, caminho)
+    if os.path.exists(candidato):
+        return candidato
+
+    # Tenta adicionar extensão caso não tenha
+    if not caminho.lower().endswith('.txt'):
+        candidato = os.path.join(dir_objetos, caminho + '.txt')
+        if os.path.exists(candidato):
+            return candidato
+
+    raise FileNotFoundError(f"Arquivo '{caminho}' não encontrado (diretório base: {dir_objetos})")
+
+
+def listar_arquivos(dir_objetos):
+    objetos = listar_objetos_disponiveis(dir_objetos)
+    if not objetos:
+        print("Nenhum arquivo .txt encontrado em", dir_objetos)
+        return
+    print("\nArquivos disponíveis:")
+    for caminho in objetos:
+        print(" •", os.path.basename(caminho))
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Sistema de projeção perspectiva cônica")
+    parser.add_argument('-o', '--objeto', help='Caminho para o arquivo do objeto (.txt)')
+    parser.add_argument('--objetos-dir', help="Diretório contendo arquivos .txt de objetos")
+    parser.add_argument('--listar', action='store_true', help='Apenas listar objetos disponíveis e sair')
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    dir_atual = os.path.dirname(os.path.abspath(__file__))
+    dir_padrao_objetos = os.path.join(os.path.dirname(dir_atual), 'objetos')
+    dir_objetos = args.objetos_dir or dir_padrao_objetos
+
+    if args.listar:
+        listar_arquivos(dir_objetos)
+        raise SystemExit(0)
+
+    if args.objeto:
+        try:
+            caminho = resolver_caminho_objeto(args.objeto, dir_objetos)
+        except FileNotFoundError as exc:
+            print(f"❌ {exc}")
+            raise SystemExit(1)
+        processar_projecao_perspectiva(caminho)
+    else:
+        menu_interativo(dir_objetos=dir_objetos)

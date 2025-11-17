@@ -3,11 +3,14 @@ projection.py
 Sistema de projeção perspectiva cônica.
 Implementa transformações para projetar objetos 3D em 2D usando perspectiva cônica.
 
-Perspectiva Cônica:
-- Centro de projeção (C): ponto de vista da câmera
-- Plano de projeção: definido por 3 pontos não-colineares
-- Raios de projeção convergem para o centro C (pontos de fuga)
-- Distância do ponto ao plano afeta o tamanho projetado
+Modelo adotado
+-----------------
+• Único centro de projeção (C), portanto trata-se de uma perspectiva cônica clássica.
+• Dependendo da orientação do plano de projeção em relação aos eixos do mundo,
+    teremos 1, 2 ou 3 pontos de fuga (um para cada família de linhas paralelas aos
+    eixos X, Y e Z que intercepta o plano).
+• Os pontos de fuga são obtidos pela interseção das retas paralelas aos eixos com o
+    plano definido por P1, P2, P3 (ou R0 com normal N).
 """
 
 import numpy as np
@@ -78,6 +81,49 @@ def criar_matriz_perspectiva(C, N, d0, d):
     ])
     
     return M_per
+
+
+def calcular_pontos_de_fuga(C, N, R0):
+    """
+    Calcula os pontos de fuga (vanishing points) para as direções dos eixos X, Y, Z.
+
+    Cada ponto de fuga é a interseção entre a família de retas paralelas a um eixo e o
+    plano de projeção. Em uma perspectiva cônica com único centro, podemos ter:
+        - 3 pontos de fuga (plano inclinado em relação aos 3 eixos)
+        - 2 pontos de fuga (plano paralelo a um dos eixos)
+        - 1 ponto de fuga (plano paralelo a dois eixos)
+
+    Args:
+        C: array [a, b, c] com posição da câmera.
+        N: vetor normal ao plano.
+        R0: ponto conhecido sobre o plano (por exemplo, P1).
+
+    Returns:
+        dict: chaves 'X','Y','Z' com numpy arrays (ponto de fuga 3D) ou None quando o
+              respectivo ponto está no infinito (retas paralelas ao plano).
+    """
+    eixos = {
+        'X': np.array([1.0, 0.0, 0.0]),
+        'Y': np.array([0.0, 1.0, 0.0]),
+        'Z': np.array([0.0, 0.0, 1.0])
+    }
+    resultados = {}
+    R0 = np.asarray(R0, dtype=float)
+    C = np.asarray(C, dtype=float)
+    N = np.asarray(N, dtype=float)
+
+    numerador = np.dot(N, (R0 - C))
+
+    for nome, direcao in eixos.items():
+        denom = np.dot(N, direcao)
+        if np.isclose(denom, 0.0):
+            resultados[nome] = None  # Paralelo ao plano → ponto no infinito
+            continue
+        lamb = numerador / denom
+        ponto_fuga = C + lamb * direcao
+        resultados[nome] = ponto_fuga
+
+    return resultados
 
 
 def projetar_ponto(ponto, matriz):

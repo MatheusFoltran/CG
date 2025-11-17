@@ -43,13 +43,27 @@ pip install -r requirements.txt
 
 ### 2️⃣ Execução
 
+#### Modo Interativo (menu)
+
 ```bash
-cd src
-python main.py
+python src/main.py
+```
+
+#### Modo CLI (sem menu)
+
+```bash
+# Projetar diretamente um arquivo
+python src/main.py --objeto cubo.txt
+
+# Projetar arquivo em outro diretório
+python src/main.py --objeto caminho/para/objeto.txt
+
+# Listar objetos disponíveis em um diretório específico
+python src/main.py --listar --objetos-dir ./objetos
 ```
 
 **Saída:**
-- Logs no terminal mostrando cada etapa do cálculo
+- Logs no terminal mostrando cada etapa do cálculo (vetor normal, parâmetros d, matriz, pontos de fuga, etc.)
 - Janela gráfica com o objeto projetado
 
 ---
@@ -58,7 +72,7 @@ python main.py
 
 ### Entrada de Dados
 
-- **Ponto de Vista** C = (a, b, c) - Posição da câmera
+- **Ponto de Vista** C = (a, b, c) - Posição da câmera (único centro de projeção)
 - **Plano de Projeção** - Definido por 3 pontos: P1, P2, P3
 - **Objeto 3D** - Vértices e superfícies (faces)
 
@@ -93,6 +107,13 @@ python main.py
 5. **Transformação Janela-Viewport**
    - Mapeia coordenadas do plano para pixels da tela
    - Centraliza objeto mantendo proporções
+
+### Pontos de Fuga
+
+- O sistema calcula automaticamente os pontos de fuga para as direções X, Y e Z.
+- Dependendo da orientação do plano de projeção em relação a cada eixo, podemos
+  ter 0, 1, 2 ou 3 pontos de fuga finitos.
+- Pontos paralelos ao plano produzem vanishing points no infinito (indicados no log).
 
 ---
 
