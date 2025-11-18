@@ -10,124 +10,54 @@ Sistema de visualização projetivo baseado em **perspectiva cônica**. Implemen
 
 ## 🗂️ Estrutura do Projeto
 
-```
 Trabalho/
-│
 ├── README.md
 ├── requirements.txt
-│
-├── src/
-│   ├── main.py            # Programa principal
-│   ├── file_parser.py     # Parser de objetos 3D
-│   ├── config_parser.py   # Configurações de câmera/plano
-│   ├── projection.py      # Lógica de projeção perspectiva
-│   ├── math_utils.py      # Operações matemáticas
-│   └── renderer.py        # Visualização 2D
-│
-└── objetos/
-    ├── cubo.txt                  # Objeto: Cubo
-    ├── piramide.txt              # Objeto: Pirâmide
-    └── COMO_CRIAR_CONFIGS.txt    # Guia para configs personalizadas
-```
-
----
-
+├── objetos/
+│   ├── cubo.txt
+│   └── piramide.txt
+└── src/
+   ├── file_parser.py      # Leitura de arquivos de objetos 3D
+   ├── math_utils.py       # Operações matemáticas (vetores, produto vetorial)
+   ├── projection.py       # Lógica de projeção perspectiva
+   ├── renderer.py         # Visualização 2D do resultado
+   ├── main.py             # Programa principal (CLI/menu)
+   └── __pycache__/
 ## 🚀 Como Executar
 
 ### 1️⃣ Instalação
 
 ```bash
-# Instalar dependências
+1. Clonar o repositório
+
+2. Instalar dependências
 pip install -r requirements.txt
 ```
 
-### 2️⃣ Modos de Execução
+### 2️⃣ Execução
 
-**Modo 1: Automático com Ângulos Pré-definidos** ⭐ (RECOMENDADO)
+#### Modo Interativo (menu)
+
 ```bash
-cd src
-
-# Visão frontal (padrão)
-python main.py ../objetos/cubo.txt --modo frontal
-
-# Visão lateral (câmera à direita)
-python main.py ../objetos/cubo.txt --modo lateral
-
-# Visão superior (câmera acima)
-python main.py ../objetos/cubo.txt --modo superior
-
-# Visão isométrica (câmera em diagonal) - MELHOR!
-python main.py ../objetos/cubo.txt --modo isometrica
+python src/main.py
 ```
-✅ Funciona para **qualquer objeto**
-✅ Calcula posições automaticamente
-✅ Adapta-se ao tamanho do objeto
 
-**Modo 2: Automático Simples**
+#### Modo CLI (sem menu)
+
 ```bash
-cd src
-python main.py ../objetos/cubo.txt
-python main.py ../objetos/piramide.txt
-```
-Usa configuração automática padrão (frontal).
+# Projetar diretamente um arquivo do diretório padrão
+python src/main.py --objeto cubo.txt
 
-**Modo 3: Com Arquivo de Configuração Personalizado** (avançado)
-```bash
-cd src
-python main.py ../objetos/cubo.txt ../objetos/minha_config.txt
-```
-Para controle total da câmera e plano.
-Veja `objetos/COMO_CRIAR_CONFIGS.txt` para detalhes.
+# Projetar arquivo em outro diretório
+python src/main.py --objeto caminho/para/objeto.txt
 
-**Modo 4: Seleção Interativa**
-```bash
-cd src
-python main.py
+# Listar objetos disponíveis em um diretório específico
+python src/main.py --listar --objetos-dir ./objetos
 ```
-Escolhe o objeto de uma lista.
 
 **Saída:**
-- Logs no terminal mostrando cada etapa do cálculo
-- Janela gráfica com o objeto projetado em perspectiva cônica
-
----
-
-## 📝 Formatos de Arquivo
-
-### Arquivo de Objeto (.txt)
-
-```
-# Comentários começam com #
-
-NV <número_de_vértices>
-<x1> <y1> <z1>
-<x2> <y2> <z2>
-...
-
-NS <número_de_superfícies>
-<n_verts> <idx1> <idx2> ... <idxN>
-...
-```
-
-### Arquivo de Configuração Personalizado (.txt) - OPCIONAL
-
-⚠️ **Use apenas quando precisar de controle total!**
-⚠️ **Para uso normal, prefira `--modo frontal/lateral/superior/isometrica`**
-
-```
-# Configuração de câmera e plano de projeção
-
-CAMERA <x> <y> <z>           # Centro de projeção
-PLANO_P1 <x> <y> <z>         # Ponto 1 do plano
-PLANO_P2 <x> <y> <z>         # Ponto 2 do plano
-PLANO_P3 <x> <y> <z>         # Ponto 3 do plano
-VIEWPORT <largura> <altura>  # Opcional (padrão: 800 600)
-```
-
-**Como criar:** Veja o arquivo `objetos/COMO_CRIAR_CONFIGS.txt`
-
-**Dica:** Execute primeiro com `--modo frontal` para ver onde está o objeto,
-depois crie sua configuração baseada nos valores mostrados no console.
+- Logs no terminal mostrando cada etapa do cálculo (vetor normal, parâmetros d, matriz, pontos de fuga, etc.)
+- Janela gráfica com o objeto projetado
 
 ---
 
@@ -135,7 +65,7 @@ depois crie sua configuração baseada nos valores mostrados no console.
 
 ### Entrada de Dados
 
-- **Ponto de Vista** C = (a, b, c) - Posição da câmera
+- **Ponto de Vista** C = (a, b, c) - Posição da câmera (único centro de projeção)
 - **Plano de Projeção** - Definido por 3 pontos: P1, P2, P3
 - **Objeto 3D** - Vértices e superfícies (faces)
 
@@ -171,9 +101,20 @@ depois crie sua configuração baseada nos valores mostrados no console.
    - Mapeia coordenadas do plano para pixels da tela
    - Centraliza objeto mantendo proporções
 
+### Pontos de Fuga
+
+- O sistema calcula automaticamente os pontos de fuga para as direções X, Y e Z.
+- Dependendo da orientação do plano de projeção em relação a cada eixo, podemos
+  ter 0, 1, 2 ou 3 pontos de fuga finitos.
+- Pontos paralelos ao plano produzem vanishing points no infinito (indicados no log).
+
 ---
 
 ## 📁 Descrição dos Módulos
+
+### `file_parser.py`
+Leitura e parsing dos arquivos de objetos 3D (.txt).
+- `ler_objeto_3d()` - Carrega vértices e superfícies a partir de arquivo.
 
 ### `math_utils.py`
 Funções matemáticas fundamentais:
@@ -188,6 +129,7 @@ Núcleo do sistema de projeção:
 - `projetar_ponto()` - Projeta um vértice 3D → 2D
 - `projetar_objeto()` - Projeta todos os vértices
 - `janela_para_viewport()` - Transforma para coordenadas da tela
+- `calcular_pontos_de_fuga()` - Calcula pontos de fuga dos eixos principais
 
 ### `renderer.py`
 Visualização gráfica:
@@ -203,6 +145,7 @@ Orquestra todo o pipeline:
 5. Projeta vértices
 6. Transforma para viewport
 7. Renderiza resultado
+8. Mostra pontos de fuga dos eixos principais
 
 ---
 
@@ -210,41 +153,20 @@ Orquestra todo o pipeline:
 
 ### Trocar o Objeto
 
-Edite `main.py`:
+Use arquivos `.txt` em `objetos/` ou passe o caminho via CLI:
 
-```python
-# Pirâmide
-vertices = np.array([
-    [0, 0, 0],    # base
-    [2, 0, 0],
-    [1, 2, 0],
-    [1, 1, 2]     # topo
-])
-
-superficies = [
-    [0, 1, 2],    # base
-    [0, 1, 3],    # faces laterais
-    [1, 2, 3],
-    [2, 0, 3]
-]
+```bash
+python src/main.py --objeto objetos/piramide.txt
 ```
 
 ### Mudar Posição da Câmera
 
-```python
-C = np.array([10, 10, 15])  # Mais distante
-C = np.array([3, 3, 5])     # Mais perto
-C = np.array([-5, 5, 10])   # Vista lateral
-```
+Edite os parâmetros no menu interativo ou diretamente no código.
+
 
 ### Alterar Plano de Projeção
 
-```python
-# Plano inclinado
-P1 = np.array([0, 0, 0])
-P2 = np.array([10, 0, 5])
-P3 = np.array([0, 10, 3])
-```
+Edite os pontos do plano no menu ou código.
 
 ---
 
@@ -256,23 +178,69 @@ P3 = np.array([0, 10, 3])
 
 ---
 
+## 📝 Formato de Arquivos de Objetos
+
+```
+# cubo.txt
+NV 8
+0 0 0
+2 0 0
+2 2 0
+0 2 0
+0 0 2
+2 0 2
+2 2 2
+0 2 2
+
+NS 6
+4 0 1 2 3
+4 4 5 6 7
+4 0 1 5 4
+4 2 3 7 6
+4 0 3 7 4
+4 1 2 6 5
+```
+
+- `NV` = Número de Vértices
+- Seguido das coordenadas (x, y, z)
+- `NS` = Número de Superfícies
+- Cada linha: número de vértices + índices dos vértices
+
+---
+
+## 🧪 Validação
+
+Para verificar se está funcionando corretamente:
+
+1. **Vetor Normal** - Deve ser perpendicular ao plano
+2. **Matriz de Perspectiva** - Elementos devem seguir as fórmulas matemáticas
+3. **Projeção** - Objetos mais distantes devem parecer menores
+4. **Viewport** - Objeto deve estar centralizado na tela
+5. **Pontos de Fuga** - Conferir logs para ver se os pontos de fuga fazem sentido geométrico
+
+---
+
+## 🐛 Troubleshooting
+
+### Objeto não aparece na tela
+- Verifique se o objeto está à frente do plano de projeção
+- Ajuste a posição da câmera (C)
+
+### Divisão por zero
+- Verifique se w' ≠ 0 após a projeção
+- Pontos no infinito são tratados como (0, 0)
+
+### Objeto distorcido
+- Verifique se o vetor normal está correto
+- Confirme que os 3 pontos do plano não são colineares
+
+---
+
 ## 🎓 Notas de Implementação
 
-### Diferenças em relação ao PDF
-
-1. **Vetor Normal**: O PDF contém um erro de digitação na fórmula de nx (usa z3x2 ao invés de z3z2). Nosso código usa `np.cross()` que implementa corretamente.
-
-2. **Transformação Viewport**: Implementamos tanto a versão iterativa (mais clara) quanto a matricial (mais matemática).
-
+1. **Vetor Normal**: O cálculo usa `np.cross()` para garantir precisão.
+2. **Transformação Viewport**: Implementação clara e robusta.
 3. **Coordenadas Homogêneas**: Tratamento explícito de casos especiais (w=0).
-
-### Melhorias Possíveis
-
-- [ ] Leitura de objetos de arquivos .txt
-- [ ] Remoção de faces ocultas (back-face culling)
-- [ ] Iluminação e sombreamento
-- [ ] Rotação interativa do objeto
-- [ ] Suporte a múltiplos objetos na cena
-- [ ] Exportação para diferentes formatos de imagem
+4. **Pontos de Fuga**: Calculados e exibidos automaticamente no log.
 
 ---
