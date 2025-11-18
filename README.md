@@ -11,20 +11,23 @@ Sistema de visualização projetivo baseado em **perspectiva cônica**. Implemen
 ## 🗂️ Estrutura do Projeto
 
 ```
-projecao-perspectiva/
+Trabalho/
 │
 ├── README.md
 ├── requirements.txt
 │
 ├── src/
-│   ├── math_utils.py      # Operações matemáticas (vetores, produto vetorial)
+│   ├── main.py            # Programa principal
+│   ├── file_parser.py     # Parser de objetos 3D
+│   ├── config_parser.py   # Configurações de câmera/plano
 │   ├── projection.py      # Lógica de projeção perspectiva
-│   ├── renderer.py        # Visualização 2D do resultado
-│   └── main.py            # Programa principal
+│   ├── math_utils.py      # Operações matemáticas
+│   └── renderer.py        # Visualização 2D
 │
 └── objetos/
-    ├── cubo.txt
-    └── piramide.txt
+    ├── cubo.txt                  # Objeto: Cubo
+    ├── piramide.txt              # Objeto: Pirâmide
+    └── COMO_CRIAR_CONFIGS.txt    # Guia para configs personalizadas
 ```
 
 ---
@@ -34,23 +37,97 @@ projecao-perspectiva/
 ### 1️⃣ Instalação
 
 ```bash
-# Clonar/baixar o projeto
-cd projecao-perspectiva
-
 # Instalar dependências
 pip install -r requirements.txt
 ```
 
-### 2️⃣ Execução
+### 2️⃣ Modos de Execução
 
+**Modo 1: Automático com Ângulos Pré-definidos** ⭐ (RECOMENDADO)
+```bash
+cd src
+
+# Visão frontal (padrão)
+python main.py ../objetos/cubo.txt --modo frontal
+
+# Visão lateral (câmera à direita)
+python main.py ../objetos/cubo.txt --modo lateral
+
+# Visão superior (câmera acima)
+python main.py ../objetos/cubo.txt --modo superior
+
+# Visão isométrica (câmera em diagonal) - MELHOR!
+python main.py ../objetos/cubo.txt --modo isometrica
+```
+✅ Funciona para **qualquer objeto**
+✅ Calcula posições automaticamente
+✅ Adapta-se ao tamanho do objeto
+
+**Modo 2: Automático Simples**
+```bash
+cd src
+python main.py ../objetos/cubo.txt
+python main.py ../objetos/piramide.txt
+```
+Usa configuração automática padrão (frontal).
+
+**Modo 3: Com Arquivo de Configuração Personalizado** (avançado)
+```bash
+cd src
+python main.py ../objetos/cubo.txt ../objetos/minha_config.txt
+```
+Para controle total da câmera e plano.
+Veja `objetos/COMO_CRIAR_CONFIGS.txt` para detalhes.
+
+**Modo 4: Seleção Interativa**
 ```bash
 cd src
 python main.py
 ```
+Escolhe o objeto de uma lista.
 
 **Saída:**
 - Logs no terminal mostrando cada etapa do cálculo
-- Janela gráfica com o objeto projetado
+- Janela gráfica com o objeto projetado em perspectiva cônica
+
+---
+
+## 📝 Formatos de Arquivo
+
+### Arquivo de Objeto (.txt)
+
+```
+# Comentários começam com #
+
+NV <número_de_vértices>
+<x1> <y1> <z1>
+<x2> <y2> <z2>
+...
+
+NS <número_de_superfícies>
+<n_verts> <idx1> <idx2> ... <idxN>
+...
+```
+
+### Arquivo de Configuração Personalizado (.txt) - OPCIONAL
+
+⚠️ **Use apenas quando precisar de controle total!**
+⚠️ **Para uso normal, prefira `--modo frontal/lateral/superior/isometrica`**
+
+```
+# Configuração de câmera e plano de projeção
+
+CAMERA <x> <y> <z>           # Centro de projeção
+PLANO_P1 <x> <y> <z>         # Ponto 1 do plano
+PLANO_P2 <x> <y> <z>         # Ponto 2 do plano
+PLANO_P3 <x> <y> <z>         # Ponto 3 do plano
+VIEWPORT <largura> <altura>  # Opcional (padrão: 800 600)
+```
+
+**Como criar:** Veja o arquivo `objetos/COMO_CRIAR_CONFIGS.txt`
+
+**Dica:** Execute primeiro com `--modo frontal` para ver onde está o objeto,
+depois crie sua configuração baseada nos valores mostrados no console.
 
 ---
 
@@ -79,8 +156,8 @@ python main.py
 3. **Montar Matriz de Perspectiva 4×4**
    ```
    ⎡ d+a·nx   a·ny    a·nz    -a·d0 ⎤
-   ⎢ b·nx   d+b·ny   b·nz    -b·d0 ⎥
-   ⎢ c·nx    c·ny   d+c·nz   -c·d0 ⎥
+   ⎢ b·nx   d+b·ny   b·nz     -b·d0 ⎥
+   ⎢ c·nx    c·ny   d+c·nz    -c·d0 ⎥
    ⎣  nx      ny      nz        d   ⎦
    ```
 
@@ -176,63 +253,6 @@ P3 = np.array([0, 10, 3])
 - **Python** >= 3.8
 - **NumPy** >= 1.24.0 - Operações matriciais
 - **Matplotlib** >= 3.7.0 - Visualização
-
----
-
-## 📝 Formato de Arquivos de Objetos (Opcional)
-
-```
-# cubo.txt
-NV 8
-0 0 0
-2 0 0
-2 2 0
-0 2 0
-0 0 2
-2 0 2
-2 2 2
-0 2 2
-
-NS 6
-4 0 1 2 3
-4 4 5 6 7
-4 0 1 5 4
-4 2 3 7 6
-4 0 3 7 4
-4 1 2 6 5
-```
-
-- `NV` = Número de Vértices
-- Seguido das coordenadas (x, y, z)
-- `NS` = Número de Superfícies
-- Cada linha: número de vértices + índices dos vértices
-
----
-
-## 🧪 Validação
-
-Para verificar se está funcionando corretamente:
-
-1. **Vetor Normal** - Deve ser perpendicular ao plano
-2. **Matriz de Perspectiva** - Elementos devem seguir as fórmulas do PDF
-3. **Projeção** - Objetos mais distantes devem parecer menores
-4. **Viewport** - Objeto deve estar centralizado na tela
-
----
-
-## 🐛 Troubleshooting
-
-### Objeto não aparece na tela
-- Verifique se o objeto está à frente do plano de projeção
-- Ajuste a posição da câmera (C)
-
-### Divisão por zero
-- Verifique se w' ≠ 0 após a projeção
-- Pontos no infinito são tratados como (0, 0)
-
-### Objeto distorcido
-- Verifique se o vetor normal está correto
-- Confirme que os 3 pontos do plano não são colineares
 
 ---
 
