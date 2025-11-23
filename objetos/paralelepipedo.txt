@@ -1,0 +1,24 @@
+# PARALELEPIPEDO.TXT
+# Objeto 3D: Paralelepípedo retângulo
+
+NV 8
+
+# Vértices
+0 0 0
+4 0 0
+4 2 0
+0 2 0
+0 0 3
+4 0 3
+4 2 3
+0 2 3
+
+NS 6
+
+# Faces
+4 0 1 2 3
+4 4 5 6 7
+4 0 1 5 4
+4 2 3 7 6
+4 0 3 7 4
+4 1 2 6 5

@@ -1,0 +1,44 @@
+# PRISMA_TRIANGULAR.TXT
+# Objeto 3D: Prisma triangular
+# Coordenadas em sistema cartesiano 3D
+
+# Número de Vértices
+NV 6
+
+# Coordenadas dos Vértices (X Y Z)
+# Base inferior (z = 0)
+# Vértice 0
+0 0 0
+# Vértice 1
+3 0 0
+# Vértice 2
+1.5 2.5 0
+
+# Base superior (z = 3)
+# Vértice 3
+0 0 3
+# Vértice 4
+3 0 3
+# Vértice 5
+1.5 2.5 3
+
+# Número de Superfícies
+NS 5
+
+# Superfícies (Número_de_Vértices Índice_V1 Índice_V2 ... Índice_Vn)
+# Regra da mão direita: vértices em sentido anti-horário visto de fora
+
+# Base inferior
+3 0 1 2
+
+# Base superior
+3 3 5 4
+
+# Lateral 1
+4 0 1 4 3
+
+# Lateral 2
+4 1 2 5 4
+
+# Lateral 3
+4 2 0 3 5
