@@ -46,9 +46,6 @@ def calcular_vetor_normal(P1, P2, P3):
     
     Fórmula: N = (P1-P2) × (P3-P2)
     
-    NOTA: O PDF fornecido contém um erro de digitação na fórmula de nx
-    (usa z3x2 ao invés de z3z2). Esta implementação está CORRETA.
-    
     Args:
         P1, P2, P3: arrays com coordenadas [x, y, z] dos pontos
     

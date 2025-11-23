@@ -57,9 +57,9 @@ def criar_matriz_perspectiva(C, N, d0, d):
     
     Matriz conforme especificação do PDF:
     ⎡ d+a·nx   a·ny    a·nz    -a·d0 ⎤
-    ⎢ b·nx   d+b·ny   b·nz    -b·d0 ⎥
-    ⎢ c·nx    c·ny   d+c·nz   -c·d0 ⎥
-    ⎣  nx      ny      nz        d   ⎦
+    ⎢ b·nx   d+b·ny   b·nz     -b·d0 ⎥
+    ⎢ c·nx    c·ny   d+c·nz    -c·d0 ⎥
+    ⎣  nx      ny      nz        1   ⎦
     
     Args:
         C: ponto de vista [a, b, c]
@@ -77,7 +77,7 @@ def criar_matriz_perspectiva(C, N, d0, d):
         [d + a*Nx,     a*Ny,         a*Nz,         -a*d0],
         [b*Nx,         d + b*Ny,     b*Nz,         -b*d0],
         [c*Nx,         c*Ny,         d + c*Nz,     -c*d0],
-        [Nx,           Ny,           Nz,           d]
+        [Nx,           Ny,           Nz,               1]
     ])
     
     return M_per
