@@ -47,6 +47,10 @@ def calcular_parametros_d(C, R0, N):
     
     # Calcular d
     d = d0 - d1
+
+    if abs(d) < 1e-6:  # Threshold
+        raise ValueError(f"Câmera muito próxima do plano (d={d:.6f}). "
+                        "Ajuste a posição da câmera.")
     
     return d0, d1, d
 
@@ -163,21 +167,18 @@ def projetar_ponto(ponto, matriz):
     
     x_prime, y_prime, z_prime, w_prime = P_prime
     
-    # 3. DIVISÃO PERSPECTIVA (cria o efeito de ponto de fuga)
-    if w_prime != 0:
-        XC = x_prime / w_prime
-        YC = y_prime / w_prime
-        ZC = z_prime / w_prime
-    else:
-        # Ponto no infinito - no ponto de fuga
-        XC, YC, ZC = 0, 0, 0
-        print(f"⚠️ Aviso: Ponto {ponto} está no ponto de fuga (w'=0)")
+    # Threshold absoluto
+    if abs(w_prime) < 1e-10:
+        raise ValueError(
+            f"Ponto {ponto} está no ponto de fuga (w'={w_prime:.2e}).\n"
+            f"Este ponto não pode ser projetado."
+        )
     
-    # 4. Coordenadas no plano de projeção
-    XP = XC
-    YP = YC
+    XC = x_prime / w_prime
+    YC = y_prime / w_prime
+    ZC = z_prime / w_prime
     
-    return np.array([XP, YP])
+    return np.array([XC, YC])
 
 
 def projetar_objeto(vertices, matriz):
