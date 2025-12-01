@@ -10,12 +10,14 @@ Sistema de visualização projetivo baseado em **perspectiva cônica**. Implemen
 
 ## 🗂️ Estrutura do Projeto
 
-Trabalho/
+Trabalho - Computação Gráfica/
 ├── README.md
 ├── requirements.txt
 ├── objetos/
 │   ├── cubo.txt
-│   └── piramide.txt
+│   ├── paralelepipedo.txt
+│   ├── piramide.txt
+│   └── prisma_triangular.txt
 └── src/
    ├── file_parser.py      # Leitura de arquivos de objetos 3D
    ├── math_utils.py       # Operações matemáticas (vetores, produto vetorial)
