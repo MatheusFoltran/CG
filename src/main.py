@@ -19,7 +19,10 @@ from projection import (
     janela_para_viewport,
     calcular_pontos_de_fuga
 )
-from renderer import desenhar_wireframe, imprimir_estatisticas
+from renderer import desenhar_wireframe, desenhar_wireframe_opengl, imprimir_estatisticas
+
+# Variável global para controlar uso de OpenGL
+USAR_OPENGL = False
 
 
 def configurar_camera_e_plano():
@@ -207,14 +210,26 @@ def processar_projecao_perspectiva(caminho_arquivo):
     print("\n   Abrindo janela de visualização...")
     
     titulo = f"Projeção Perspectiva - {nome.upper()}"
-    desenhar_wireframe(
-        pontos_tela, 
-        superficies,
-        largura=u_max,
-        altura=v_max,
-        mostrar_vertices=True,
-        titulo=titulo
-    )
+    
+    # Escolher renderer baseado na configuração
+    if USAR_OPENGL:
+        desenhar_wireframe_opengl(
+            pontos_tela, 
+            superficies,
+            largura=u_max,
+            altura=v_max,
+            mostrar_vertices=True,
+            titulo=titulo + " [OpenGL]"
+        )
+    else:
+        desenhar_wireframe(
+            pontos_tela, 
+            superficies,
+            largura=u_max,
+            altura=v_max,
+            mostrar_vertices=True,
+            titulo=titulo
+        )
     
     print("\n✅ Visualização concluída!")
     print("="*70)
@@ -316,6 +331,7 @@ def parse_args():
     parser.add_argument('-o', '--objeto', help='Caminho para o arquivo do objeto (.txt)')
     parser.add_argument('--objetos-dir', help="Diretório contendo arquivos .txt de objetos")
     parser.add_argument('--listar', action='store_true', help='Apenas listar objetos disponíveis e sair')
+    parser.add_argument('--opengl', action='store_true', help='Usar renderização OpenGL (pyglet) em vez de Matplotlib')
     return parser.parse_args()
 
 
@@ -324,6 +340,11 @@ if __name__ == "__main__":
     dir_atual = os.path.dirname(os.path.abspath(__file__))
     dir_padrao_objetos = os.path.join(os.path.dirname(dir_atual), 'objetos')
     dir_objetos = args.objetos_dir or dir_padrao_objetos
+
+    # Configurar uso de OpenGL
+    if args.opengl:
+        USAR_OPENGL = True
+        print("🎮 Modo OpenGL ativado")
 
     if args.listar:
         listar_arquivos(dir_objetos)
