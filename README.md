@@ -8,6 +8,10 @@ Sistema de visualização projetivo baseado em **perspectiva cônica**. Implemen
 
 ---
 
+Nota rápida: este projeto suporta dois modos de renderização — o renderer padrão com `Matplotlib` (recomendado para geração de imagens estáticas e ambientes sem aceleração gráfica) e um renderer interativo acelerado por GPU via `pyglet` (OpenGL). Use `--opengl` para abrir a janela OpenGL interativa (veja exemplos abaixo).
+
+---
+
 ## 🗂️ Estrutura do Projeto
 
 Trabalho - Computação Gráfica/
@@ -49,6 +53,9 @@ python src/main.py
 ```bash
 # Projetar diretamente um arquivo do diretório padrão
 python src/main.py --objeto cubo.txt
+
+# Projetar e abrir a janela OpenGL (interativo)
+python src/main.py --objeto cubo.txt --opengl
 
 # Projetar arquivo em outro diretório
 python src/main.py --objeto caminho/para/objeto.txt
@@ -177,6 +184,8 @@ Edite os pontos do plano no menu ou código.
 - **Python** >= 3.8
 - **NumPy** >= 1.24.0 - Operações matriciais
 - **Matplotlib** >= 3.7.0 - Visualização
+ - **pyglet** >= 2.0.0 - (opcional) Janela OpenGL para renderização interativa
+ - **PyOpenGL, PyOpenGL_accelerate** - (opcional) Necessários apenas se for usar código GL em baixo nível / shaders
 
 ---
 
