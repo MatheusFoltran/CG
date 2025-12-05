@@ -261,3 +261,8 @@ NS 6
 - Cada linha: número de vértices + índices dos vértices
 
 ---
+
+---
+### Autor:
+Matheus Foltran Consonni
+---
