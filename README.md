@@ -263,7 +263,6 @@ NS 6
 ---
 
 ### Autor:
----
 
 Matheus Foltran Consonni
 
