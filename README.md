@@ -8,11 +8,29 @@ Sistema de visualização projetivo baseado em **perspectiva cônica**. Implemen
 
 ---
 
-Nota rápida: este projeto suporta dois modos de renderização — o renderer padrão com `Matplotlib` (recomendado para geração de imagens estáticas e ambientes sem aceleração gráfica) e um renderer interativo acelerado por GPU via `pyglet` (OpenGL). Use `--opengl` para abrir a janela OpenGL interativa (veja exemplos abaixo).
+## 🖼️ Modos de Renderização: Matplotlib vs Pyglet (OpenGL)
+
+Este projeto oferece **dois modos de visualização** com resultados visualmente idênticos, mas propósitos diferentes:
+
+| Característica | **Matplotlib** (padrão) | **Pyglet/OpenGL** (`--opengl`) |
+|----------------|------------------------|-------------------------------|
+| **Propósito** | Biblioteca científica para plotagem de gráficos e dados | Biblioteca de jogos/multimídia que usa OpenGL real |
+| **Renderização** | Software (CPU) | Hardware acelerado (GPU) |
+| **Janela** | Estática, ideal para exportar imagens | Interativa e redimensionável em tempo real |
+| **Uso típico** | Gráficos científicos, papers, relatórios | Aplicações gráficas, jogos, simulações |
+| **Performance** | Suficiente para wireframes simples | Mais eficiente para cenas complexas |
+
+### Por que dois renderers?
+
+- **Matplotlib** foi projetado para *plotar gráficos* (funções, histogramas, scatter plots). Usamos ele aqui porque é simples, já vem com NumPy/SciPy, e gera imagens de alta qualidade para documentação.
+
+- **Pyglet** é um wrapper Python para **OpenGL**, a API padrão da indústria para renderização 3D em tempo real. Ele simula o pipeline gráfico que GPUs reais executam, oferecendo uma experiência mais próxima de como engines de jogos e softwares CAD funcionam.
+
+> 💡 **Na prática**: Para este trabalho acadêmico, ambos produzem o **mesmo resultado visual** (wireframe 2D projetado). A diferença está na tecnologia subjacente — Matplotlib "desenha pixels em uma imagem", enquanto Pyglet "envia comandos para a GPU renderizar".
 
 ---
 
-🗂️ Estrutura do Projeto
+## 🗂️ Estrutura do Projeto
 
 ```bash
 Trabalho - Computação Gráfica/
@@ -67,6 +85,28 @@ python src/main.py --objeto caminho/para/objeto.txt
 python src/main.py --listar --objetos-dir ./objetos
 ```
 
+#### Opção rápida com Makefile
+
+Se preferir, existe um `Makefile` na raiz que facilita executar as visualizações:
+
+```bash
+# Executa a visualização para `objetos/cubo.txt`
+make cubo
+
+# Ou passando a extensão
+make cubo.txt
+
+# Executa todas as visualizações listadas em `objetos/`
+make all
+
+# Passar o flag OpenGL (janela interativa) via variável `OPENGL`:
+# Exemplo: executar a visualização em OpenGL
+make cubo OPENGL=1
+
+# Ou para executar todos em OpenGL:
+make all OPENGL=1
+```
+
 **Saída:**
 - Logs no terminal mostrando cada etapa do cálculo (vetor normal, parâmetros d, matriz, pontos de fuga, etc.)
 - Janela gráfica com o objeto projetado
@@ -100,7 +140,7 @@ python src/main.py --listar --objetos-dir ./objetos
    ⎡ d+a·nx   a·ny    a·nz    -a·d0 ⎤
    ⎢ b·nx   d+b·ny   b·nz     -b·d0 ⎥
    ⎢ c·nx    c·ny   d+c·nz    -c·d0 ⎥
-   ⎣  nx      ny      nz        d   ⎦
+   ⎣  nx      ny      nz        1   ⎦
    ```
 
 4. **Projetar Vértices**
