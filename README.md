@@ -12,8 +12,9 @@ Nota rápida: este projeto suporta dois modos de renderização — o renderer p
 
 ---
 
-## 🗂️ Estrutura do Projeto
+🗂️ Estrutura do Projeto
 
+```bash
 Trabalho - Computação Gráfica/
 ├── README.md
 ├── requirements.txt
@@ -29,6 +30,8 @@ Trabalho - Computação Gráfica/
    ├── renderer.py         # Visualização 2D do resultado
    ├── main.py             # Programa principal (CLI/menu)
    └── __pycache__/
+```
+   
 ## 🚀 Como Executar
 
 ### 1️⃣ Instalação
