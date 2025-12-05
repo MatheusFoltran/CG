@@ -63,8 +63,17 @@ def desenhar_wireframe_opengl(pontos_tela, superficies, largura=800, altura=600,
     print(f"   Tamanho objeto: {obj_largura:.1f} x {obj_altura:.1f}")
     print(f"   Centro objeto: ({centro_u:.1f}, {centro_v:.1f})")
 
-    # Criar janela pyglet
+    # Criar janela pyglet (centralizada na tela)
     window = pyglet.window.Window(width=largura, height=altura, caption=titulo, resizable=True)
+    
+    # Centralizar janela na tela
+    try:
+        screen = window.display.get_default_screen()
+        pos_x = (screen.width - largura) // 2
+        pos_y = (screen.height - altura) // 2
+        window.set_location(pos_x, pos_y)
+    except Exception:
+        pass  # Se não conseguir centralizar, continua normalmente
     
     # Margem fixa em pixels (será escalada com a janela)
     MARGEM_BASE = 80
@@ -413,6 +422,20 @@ def desenhar_wireframe(pontos_tela, superficies, largura=800, altura=600,
     print(f"   Limites v: [{pontos_tela[:, 1].min():.1f}, {pontos_tela[:, 1].max():.1f}]")
     
     fig, ax = plt.subplots(figsize=(12, 9))
+    
+    # Centralizar janela Matplotlib na tela
+    try:
+        # Funciona com backend TkAgg (padrão no Windows)
+        mng = plt.get_current_fig_manager()
+        # Obter tamanho da tela
+        fig_width, fig_height = fig.get_size_inches() * fig.dpi
+        screen_width = mng.window.winfo_screenwidth()
+        screen_height = mng.window.winfo_screenheight()
+        x = int((screen_width - fig_width) // 2)
+        y = int((screen_height - fig_height) // 2)
+        mng.window.geometry(f"+{x}+{y}")
+    except Exception:
+        pass  # Se não conseguir centralizar, continua normalmente
     
     arestas_desenhadas = 0
     

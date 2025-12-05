@@ -239,9 +239,29 @@ def menu_interativo(dir_objetos=None):
     """
     Menu interativo para escolher objeto e configurações.
     """
+    global USAR_OPENGL
+    
     print("\n" + "="*70)
     print("🎯 SISTEMA DE VISUALIZAÇÃO 3D - PROJEÇÃO PERSPECTIVA")
     print("="*70)
+    
+    # Escolher modo de renderização
+    print("\n🖼️  Escolha o modo de renderização:")
+    print("   1 - Matplotlib (gráfico estático)")
+    print("   2 - OpenGL/Pyglet (janela interativa)")
+    
+    while True:
+        modo = input("\n   Modo [1/2]: ").strip()
+        if modo == '1':
+            USAR_OPENGL = False
+            print("   ✅ Modo Matplotlib selecionado")
+            break
+        elif modo == '2':
+            USAR_OPENGL = True
+            print("   ✅ Modo OpenGL selecionado")
+            break
+        else:
+            print("   ⚠️  Digite 1 ou 2")
     
     # Local padrão da pasta 'objetos' (um nível acima de src)
     if dir_objetos is None:
@@ -259,9 +279,12 @@ def menu_interativo(dir_objetos=None):
                 nome = os.path.basename(caminho)
                 print(f"   {i:2d} - {nome}")
 
+        modo_str = "OpenGL" if USAR_OPENGL else "Matplotlib"
+        print(f"\n   Modo atual: {modo_str}")
         print("\n   Opções:")
         print("     [número] - Selecionar arquivo pelo índice")
         print("     [nome]   - Selecionar arquivo pelo nome (com ou sem .txt)")
+        print("     m        - Mudar modo de renderização")
         print("     r        - Recarregar lista")
         print("     q        - Sair")
 
@@ -275,6 +298,12 @@ def menu_interativo(dir_objetos=None):
             break
 
         if escolha.lower() == 'r':
+            continue
+        
+        if escolha.lower() == 'm':
+            USAR_OPENGL = not USAR_OPENGL
+            modo_str = "OpenGL" if USAR_OPENGL else "Matplotlib"
+            print(f"   ✅ Modo alterado para: {modo_str}")
             continue
 
         # Seleção por índice
