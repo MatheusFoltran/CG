@@ -145,9 +145,9 @@ def projetar_ponto(ponto, matriz):
     2. Multiplicar pela matriz: P' = M_per · P
     3. Resultado em coordenadas homogêneas: P' = [x', y', z', w']
     4. Divisão perspectiva: XC = x'/w', YC = y'/w', ZC = z'/w'
-       💡 Esta divisão cria o efeito de PONTO DE FUGA
-       💡 w' varia com a distância do ponto ao plano
-       💡 Quanto maior w', menor o ponto projetado
+        Esta divisão cria o efeito de PONTO DE FUGA
+        w' varia com a distância do ponto ao plano
+        Quanto maior w', menor o ponto projetado
     5. Coordenadas no plano: XP = XC, YP = YC
     
     Args:
@@ -199,7 +199,7 @@ def projetar_objeto(vertices, matriz):
             ponto_2d = projetar_ponto(vertice, matriz)
             vertices_2d.append(ponto_2d)
         except Exception as e:
-            print(f"❌ Erro ao projetar vértice {i}: {e}")
+            print(f"Erro ao projetar vértice {i}: {e}")
             vertices_2d.append(np.array([0, 0]))
     
     return np.array(vertices_2d)

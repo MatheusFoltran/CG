@@ -143,7 +143,7 @@ def imprimir_info_objeto(vertices, superficies, nome):
         superficies: lista de superfícies
         nome: nome do objeto
     """
-    print(f"\n📦 Objeto carregado: {nome.upper()}")
+    print(f"\nObjeto carregado: {nome.upper()}")
     print(f"   Vértices: {len(vertices)}")
     print(f"   Superfícies: {len(superficies)}")
     

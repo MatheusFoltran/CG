@@ -38,7 +38,7 @@ def desenhar_wireframe_opengl(pontos_tela, superficies, largura=800, altura=600,
         matriz_perspectiva: matriz de projeção (para projetar eixos 3D)
     """
     if not OPENGL_DISPONIVEL:
-        print("⚠️  OpenGL não disponível. Instale com: pip install pyglet")
+        print("OpenGL nao disponivel. Instale com: pip install pyglet")
         print("    Usando Matplotlib como fallback...")
         desenhar_wireframe(pontos_tela, superficies, largura, altura, mostrar_vertices, titulo)
         return
@@ -392,7 +392,7 @@ def desenhar_wireframe_opengl(pontos_tela, superficies, largura=800, altura=600,
         if symbol == pyglet.window.key.ESCAPE or symbol == pyglet.window.key.Q:
             window.close()
 
-    print("\n   🎮 Controles OpenGL:")
+    print("\n   Controles OpenGL:")
     print("      ESC ou Q - Fechar janela")
     print("      Redimensione a janela livremente")
 
@@ -456,7 +456,7 @@ def desenhar_wireframe(pontos_tela, superficies, largura=800, altura=600,
             arestas_desenhadas += len(xs) - 1
             
         except IndexError as e:
-            print(f"⚠️ Aviso: Superfície {i} contém índice inválido: {e}")
+            print(f"Aviso: Superfície {i} contém índice inválido: {e}")
     
     print(f"   Arestas desenhadas: {arestas_desenhadas}")
     
@@ -530,7 +530,7 @@ def salvar_imagem(pontos_tela, superficies, nome_arquivo,
     plt.savefig(nome_arquivo, dpi=dpi, bbox_inches='tight')
     plt.close()
     
-    print(f"✅ Imagem salva: {nome_arquivo}")
+    print(f"Imagem salva: {nome_arquivo}")
 
 
 def imprimir_estatisticas(vertices_3d, vertices_2d, pontos_tela):
@@ -543,21 +543,21 @@ def imprimir_estatisticas(vertices_3d, vertices_2d, pontos_tela):
         pontos_tela: coordenadas finais na tela
     """
     print("\n" + "="*60)
-    print("📊 ESTATÍSTICAS DA PROJEÇÃO")
+    print("ESTATISTICAS DA PROJECAO")
     print("="*60)
     
-    print(f"\n🔢 Número de vértices: {len(vertices_3d)}")
+    print(f"\nNumero de vertices: {len(vertices_3d)}")
     
-    print(f"\n📐 Limites 3D (objeto original):")
+    print(f"\nLimites 3D (objeto original):")
     print(f"   X: [{vertices_3d[:, 0].min():.2f}, {vertices_3d[:, 0].max():.2f}]")
     print(f"   Y: [{vertices_3d[:, 1].min():.2f}, {vertices_3d[:, 1].max():.2f}]")
     print(f"   Z: [{vertices_3d[:, 2].min():.2f}, {vertices_3d[:, 2].max():.2f}]")
     
-    print(f"\n📏 Limites 2D (plano de projeção):")
+    print(f"\nLimites 2D (plano de projecao):")
     print(f"   XP: [{vertices_2d[:, 0].min():.2f}, {vertices_2d[:, 0].max():.2f}]")
     print(f"   YP: [{vertices_2d[:, 1].min():.2f}, {vertices_2d[:, 1].max():.2f}]")
     
-    print(f"\n🖥️  Limites Tela (pixels):")
+    print(f"\nLimites Tela (pixels):")
     print(f"   u: [{pontos_tela[:, 0].min():.1f}, {pontos_tela[:, 0].max():.1f}]")
     print(f"   v: [{pontos_tela[:, 1].min():.1f}, {pontos_tela[:, 1].max():.1f}]")
     

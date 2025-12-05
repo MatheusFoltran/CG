@@ -33,7 +33,7 @@ def configurar_camera_e_plano():
         tuple: (C, P1, P2, P3, R0)
     """
     print("\n" + "="*70)
-    print("🎥 CONFIGURAÇÃO DE CÂMERA E PLANO DE PROJEÇÃO")
+    print("CONFIGURACAO DE CAMERA E PLANO DE PROJECAO")
     print("="*70)
     
     # ============================================
@@ -50,8 +50,8 @@ def configurar_camera_e_plano():
     # Ponto sobre o plano (pode ser P1, P2 ou P3)
     R0 = P1
     
-    print(f"\n📍 Ponto de Vista (C):      {C}")
-    print(f"📐 Plano de Projeção:")
+    print(f"\nPonto de Vista (C):      {C}")
+    print(f"Plano de Projecao:")
     print(f"   P1 = {P1}")
     print(f"   P2 = {P2}")
     print(f"   P3 = {P3}")
@@ -67,7 +67,7 @@ def configurar_viewport():
     Returns:
         tuple: (u_min, u_max, v_min, v_max)
     """
-    print("\n🖥️  CONFIGURAÇÃO DA VIEWPORT")
+    print("\nCONFIGURACAO DA VIEWPORT")
     
     # Resolução da tela (pixels)
     u_min = 0
@@ -89,7 +89,7 @@ def processar_projecao_perspectiva(caminho_arquivo):
         caminho_arquivo: caminho para o arquivo do objeto 3D
     """
     print("\n" + "="*70)
-    print("🚀 SISTEMA DE VISUALIZAÇÃO COM PROJEÇÃO PERSPECTIVA CÔNICA")
+    print("SISTEMA DE VISUALIZACAO COM PROJECAO PERSPECTIVA CONICA")
     print("="*70)
     
     # ========================================
@@ -99,7 +99,7 @@ def processar_projecao_perspectiva(caminho_arquivo):
         vertices, superficies, nome = ler_objeto_3d(caminho_arquivo)
         imprimir_info_objeto(vertices, superficies, nome)
     except Exception as e:
-        print(f"\n❌ Erro ao carregar objeto: {e}")
+        print(f"\nErro ao carregar objeto: {e}")
         return
     
     # ========================================
@@ -111,22 +111,22 @@ def processar_projecao_perspectiva(caminho_arquivo):
     # PASSO 3: Calcular vetor normal
     # ========================================
     print("\n" + "="*70)
-    print("🧮 CÁLCULO DO VETOR NORMAL AO PLANO")
+    print("CALCULO DO VETOR NORMAL AO PLANO")
     print("="*70)
     
     try:
         N = calcular_vetor_normal(P1, P2, P3)
-        print(f"\n✅ Vetor Normal N = {N}")
+        print(f"\nVetor Normal N = {N}")
         print(f"   Componentes: Nx={N[0]:.4f}, Ny={N[1]:.4f}, Nz={N[2]:.4f}")
     except ValueError as e:
-        print(f"\n❌ Erro: {e}")
+        print(f"\nErro: {e}")
         return
     
     # ========================================
     # PASSO 4: Calcular parâmetros d
     # ========================================
     print("\n" + "="*70)
-    print("📐 CÁLCULO DOS PARÂMETROS d0, d1, d")
+    print("CALCULO DOS PARAMETROS d0, d1, d")
     print("="*70)
     
     d0, d1, d = calcular_parametros_d(C, R0, N)
@@ -135,14 +135,14 @@ def processar_projecao_perspectiva(caminho_arquivo):
     print(f"   d  = d0 - d1 = {d:.4f}")
     
     if abs(d) < 1e-10:
-        print("\n⚠️  AVISO: d ≈ 0. Câmera está muito próxima do plano!")
-        print("   Isso pode causar distorções extremas na projeção.")
+        print("\nAVISO: d = 0. Camera esta muito proxima do plano!")
+        print("   Isso pode causar distorcoes extremas na projecao.")
     
     # ========================================
     # PASSO 5: Criar matriz de perspectiva
     # ========================================
     print("\n" + "="*70)
-    print("🔢 MATRIZ DE PROJEÇÃO PERSPECTIVA")
+    print("MATRIZ DE PROJECAO PERSPECTIVA")
     print("="*70)
     
     M_per = criar_matriz_perspectiva(C, N, d0, d)
@@ -151,7 +151,7 @@ def processar_projecao_perspectiva(caminho_arquivo):
 
     pontos_fuga = calcular_pontos_de_fuga(C, N, R0)
     pontos_finitos = {k: v for k, v in pontos_fuga.items() if v is not None}
-    print("\n📍 Pontos de fuga detectados:")
+    print("\nPontos de fuga detectados:")
     if not pontos_finitos:
         print("   Nenhum ponto de fuga finito (plano paralelo aos eixos principais).")
     else:
@@ -166,11 +166,11 @@ def processar_projecao_perspectiva(caminho_arquivo):
     # PASSO 6: Projetar objeto no plano
     # ========================================
     print("\n" + "="*70)
-    print("📍 PROJEÇÃO DOS VÉRTICES NO PLANO")
+    print("PROJECAO DOS VERTICES NO PLANO")
     print("="*70)
     
     vertices_2d = projetar_objeto(vertices, M_per)
-    print(f"\n✅ {len(vertices_2d)} vértices projetados com sucesso")
+    print(f"\n{len(vertices_2d)} vertices projetados com sucesso")
     print(f"   Exemplo - Vértice 0:")
     print(f"      3D: {vertices[0]}")
     print(f"      2D: {vertices_2d[0]}")
@@ -179,7 +179,7 @@ def processar_projecao_perspectiva(caminho_arquivo):
     # PASSO 7: Transformar para viewport
     # ========================================
     print("\n" + "="*70)
-    print("🖼️  TRANSFORMAÇÃO JANELA → VIEWPORT")
+    print("TRANSFORMACAO JANELA -> VIEWPORT")
     print("="*70)
     
     u_min, u_max, v_min, v_max = configurar_viewport()
@@ -191,7 +191,7 @@ def processar_projecao_perspectiva(caminho_arquivo):
         v_max=v_max
     )
     
-    print(f"\n✅ Transformação concluída")
+    print(f"\nTransformacao concluida")
     print(f"   Exemplo - Vértice 0 na tela:")
     print(f"      Plano: {vertices_2d[0]}")
     print(f"      Tela:  {pontos_tela[0]} pixels")
@@ -205,7 +205,7 @@ def processar_projecao_perspectiva(caminho_arquivo):
     # PASSO 9: Renderizar
     # ========================================
     print("\n" + "="*70)
-    print("🎨 RENDERIZAÇÃO")
+    print("RENDERIZACAO")
     print("="*70)
     print("\n   Abrindo janela de visualização...")
     
@@ -231,7 +231,7 @@ def processar_projecao_perspectiva(caminho_arquivo):
             titulo=titulo
         )
     
-    print("\n✅ Visualização concluída!")
+    print("\nVisualizacao concluida!")
     print("="*70)
 
 
@@ -242,11 +242,11 @@ def menu_interativo(dir_objetos=None):
     global USAR_OPENGL
     
     print("\n" + "="*70)
-    print("🎯 SISTEMA DE VISUALIZAÇÃO 3D - PROJEÇÃO PERSPECTIVA")
+    print("SISTEMA DE VISUALIZACAO 3D - PROJECAO PERSPECTIVA")
     print("="*70)
     
     # Escolher modo de renderização
-    print("\n🖼️  Escolha o modo de renderização:")
+    print("\nEscolha o modo de renderizacao:")
     print("   1 - Matplotlib (gráfico estático)")
     print("   2 - OpenGL/Pyglet (janela interativa)")
     
@@ -254,14 +254,14 @@ def menu_interativo(dir_objetos=None):
         modo = input("\n   Modo [1/2]: ").strip()
         if modo == '1':
             USAR_OPENGL = False
-            print("   ✅ Modo Matplotlib selecionado")
+            print("   Modo Matplotlib selecionado")
             break
         elif modo == '2':
             USAR_OPENGL = True
-            print("   ✅ Modo OpenGL selecionado")
+            print("   Modo OpenGL selecionado")
             break
         else:
-            print("   ⚠️  Digite 1 ou 2")
+            print("   Digite 1 ou 2")
     
     # Local padrão da pasta 'objetos' (um nível acima de src)
     if dir_objetos is None:
@@ -271,7 +271,7 @@ def menu_interativo(dir_objetos=None):
     while True:
         objetos = listar_objetos_disponiveis(dir_objetos)
 
-        print("\n📁 Objetos disponíveis na pasta 'objetos/':")
+        print("\nObjetos disponiveis na pasta 'objetos/':")
         if not objetos:
             print("   (Nenhum arquivo .txt encontrado em 'objetos/')")
         else:
@@ -290,11 +290,11 @@ def menu_interativo(dir_objetos=None):
 
         escolha = input("\n   Escolha um arquivo (índice/nome) ou opção: ").strip()
         if not escolha:
-            print("   ⚠️  Entrada vazia. Tente novamente.")
+            print("   Entrada vazia. Tente novamente.")
             continue
 
         if escolha.lower() == 'q':
-            print("\n👋 Até logo!")
+            print("\nAte logo!")
             break
 
         if escolha.lower() == 'r':
@@ -303,7 +303,7 @@ def menu_interativo(dir_objetos=None):
         if escolha.lower() == 'm':
             USAR_OPENGL = not USAR_OPENGL
             modo_str = "OpenGL" if USAR_OPENGL else "Matplotlib"
-            print(f"   ✅ Modo alterado para: {modo_str}")
+            print(f"   Modo alterado para: {modo_str}")
             continue
 
         # Seleção por índice
@@ -313,7 +313,7 @@ def menu_interativo(dir_objetos=None):
                 caminho = objetos[idx]
                 processar_projecao_perspectiva(caminho)
             else:
-                print("   ⚠️ Índice inválido. Tente novamente.")
+                print("   Indice invalido. Tente novamente.")
             continue
 
         # Seleção por nome (com ou sem .txt)
@@ -324,7 +324,7 @@ def menu_interativo(dir_objetos=None):
             processar_projecao_perspectiva(encontrados[0])
             continue
 
-        print("   ⚠️ Arquivo não encontrado na pasta 'objetos/'. Use o índice ou nome correto.")
+        print("   Arquivo nao encontrado na pasta 'objetos/'. Use o indice ou nome correto.")
 
 
 def resolver_caminho_objeto(caminho, dir_objetos):
@@ -373,7 +373,7 @@ if __name__ == "__main__":
     # Configurar uso de OpenGL
     if args.opengl:
         USAR_OPENGL = True
-        print("🎮 Modo OpenGL ativado")
+        print("Modo OpenGL ativado")
 
     if args.listar:
         listar_arquivos(dir_objetos)
@@ -383,7 +383,7 @@ if __name__ == "__main__":
         try:
             caminho = resolver_caminho_objeto(args.objeto, dir_objetos)
         except FileNotFoundError as exc:
-            print(f"❌ {exc}")
+            print(f"Erro: {exc}")
             raise SystemExit(1)
         processar_projecao_perspectiva(caminho)
     else:
